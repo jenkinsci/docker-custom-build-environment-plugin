@@ -1,0 +1,8 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+  <f:entry title="${%Mount point for jenkins workspace}" field="mountPoint">
+    <f:textbox default="/var/jenkins/workspace"/>
+  </f:entry>
+
+
+</j:jelly>
