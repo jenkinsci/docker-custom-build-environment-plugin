@@ -5,10 +5,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Computer;
 import hudson.model.Run;
-import hudson.remoting.Channel;
-import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -40,28 +37,12 @@ public class DockerBuildWrapper extends BuildWrapper {
             listener.getLogger().println("Building a Docker image from Dockerfile");
             docker.buildImage(build.getWorkspace(), hash);
         }
+
         listener.getLogger().println("Starting a Docker container to host the build");
-        final String container = docker.run(hash, build.getWorkspace(), mountPoint);
+        // final Container container = docker.run(hash, build.getWorkspace());
 
-        build.addAction(new DockerBadge(hash, container));
-
-        return new Environment() {
-
-            @Override
-            public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                docker.stop(container);
-                return true;
-            }
-        };
-    }
-
-
-    @Override
-    public Launcher decorateLauncher(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        // TODO decorate launcher so build actually run inside container
-
-        return launcher;
-    }
+        return null;
+     }
 
     @Extension
     public final static class DescriptorImpl extends BuildWrapperDescriptor {
