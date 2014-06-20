@@ -18,6 +18,10 @@ public class DockerBadge implements BuildBadgeAction {
         return "/plugin/oki-docki/docker-badge.png";
     }
 
+    public String getImage() {
+        return image;
+    }
+
     public String getDisplayName() {
         return "build inside docker container";
     }

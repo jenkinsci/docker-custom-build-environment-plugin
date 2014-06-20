@@ -1,4 +1,4 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-   <img title="Docker"
+   <img title="Built on Docker"
         src="${rootURL}/plugin/oki-docki/images/docker-badge.png"/>
 </j:jelly>

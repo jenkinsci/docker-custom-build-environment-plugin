@@ -47,12 +47,12 @@ public class Docker {
         }
     }
 
-    public void run(String tag, FilePath workspace, String user, String command) throws IOException, InterruptedException {
+    public void run(String image, FilePath workspace, String user, String command) throws IOException, InterruptedException {
 
         int status = launcher.launch()
                 .cmds("docker", "run", "-t",
                         "-v", workspace.getRemote()+":/var/workspace:rw",
-                        tag, "/var/workspace/" + command
+                        image, "/var/workspace/" + command
                         )
                 .writeStdin().stdout(listener.getLogger()).stderr(listener.getLogger()).join();
 
