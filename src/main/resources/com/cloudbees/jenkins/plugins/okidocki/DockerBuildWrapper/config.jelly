@@ -1,3 +1,7 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <h1>Docker !</h1>
+    <f:nested>
+      <f:hetero-radio field="selector" hasHeader="true"
+                      descriptors="${descriptor.selectors()}" />
+    </f:nested>
 </j:jelly>

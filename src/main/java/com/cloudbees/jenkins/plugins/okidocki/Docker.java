@@ -36,6 +36,16 @@ public class Docker {
         return status == 0;
     }
 
+    public boolean pullImage(String image) throws IOException, InterruptedException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        int status = launcher.launch()
+                .cmds("docker", "pull", image)
+                .stdout(out).stderr(err).join();
+        return status == 0;
+    }
+
+
     public void buildImage(FilePath workspace, String tag) throws IOException, InterruptedException {
 
         int status = launcher.launch()
@@ -52,8 +62,8 @@ public class Docker {
         int status = launcher.launch()
                 .cmds("docker", "run", "-t",
                         "-v", workspace.getRemote()+":/var/workspace:rw",
-                        image, "/var/workspace/" + command
-                        )
+                        image, command
+                     )
                 .writeStdin().stdout(listener.getLogger()).stderr(listener.getLogger()).join();
 
         if (status != 0) {
