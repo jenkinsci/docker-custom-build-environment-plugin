@@ -50,48 +50,47 @@ public class DockerBuildWrapper extends BuildWrapper {
             @Override
             public Proc launch(ProcStarter starter) throws IOException {
 
-                if (runInContainer.enabled()) {
+                if (!runInContainer.enabled()) return super.launch(starter);
 
-                    // TODO only run the container first time, then ns-enter for next commands to execute.
+                // TODO only run the container first time, then ns-enter for next commands to execute.
 
-                    Docker docker = new Docker(launcher, listener);
-                    if (runInContainer.image == null) {
-                        listener.getLogger().println("Prepare Docker image to host the build environment");
-                        try {
-                            runInContainer.image = selector.prepareDockerImage(docker, build, listener);
-                            build.addAction(new DockerBadge(runInContainer.image));
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException("Interrupted");
-                        }
-                    }
-
-                    String tmp;
+                Docker docker = new Docker(launcher, listener);
+                if (runInContainer.image == null) {
+                    listener.getLogger().println("Prepare Docker image to host the build environment");
                     try {
-                        tmp = build.getWorkspace().act(GetTmpdir);
+                        runInContainer.image = selector.prepareDockerImage(docker, build, listener);
+                        build.addAction(new DockerBadge(runInContainer.image));
                     } catch (InterruptedException e) {
                         throw new RuntimeException("Interrupted");
                     }
-
-
-                    List<String> cmds = new ArrayList<String>();
-                    cmds.add("docker");
-                    cmds.add("run");
-                    cmds.add("-rm");
-                    cmds.add("-it");
-                    // mount workspace under same path in Docker container
-                    cmds.add("-v");
-                    cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
-                    // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-                    cmds.add("-v");
-                    cmds.add(tmp + ":" + tmp + ":rw");
-                    cmds.add(runInContainer.image);
-                    cmds.addAll(starter.cmds());
-                    starter.cmds(cmds);
                 }
+
+                String tmp;
+                try {
+                    tmp = build.getWorkspace().act(GetTmpdir);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted");
+                }
+
+                // TODO start the container with a long running command, then use docker-enter
+                // would be great to use docker exec as described on https://github.com/docker/docker/issues/1437
+
+                List<String> cmds = new ArrayList<String>();
+                cmds.add("docker");
+                cmds.add("run");
+                cmds.add("-rm");
+                cmds.add("-it");
+                // mount workspace under same path in Docker container
+                cmds.add("-v");
+                cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
+                // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+                cmds.add("-v");
+                cmds.add(tmp + ":" + tmp + ":rw");
+                cmds.add(runInContainer.image);
+                cmds.addAll(starter.cmds());
+                starter.cmds(cmds);
                 return super.launch(starter);
             }
-
-
         };
     }
 
