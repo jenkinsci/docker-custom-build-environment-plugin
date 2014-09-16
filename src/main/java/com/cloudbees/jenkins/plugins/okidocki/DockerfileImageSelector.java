@@ -3,8 +3,8 @@ package com.cloudbees.jenkins.plugins.okidocki;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -28,7 +28,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
     }
 
     @Override
-    public String prepareDockerImage(Docker docker, AbstractBuild build) throws IOException, InterruptedException {
+    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
 
         FilePath filePath = build.getWorkspace().child(dockerfile);
 
@@ -36,6 +36,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
 
         // search for a tagged image with this hash ID
         if (!docker.hasImage(hash)) {
+            listener.getLogger().println("Build Docker image from "+dockerfile+" ...");
             docker.buildImage(build.getWorkspace(), hash);
         }
 

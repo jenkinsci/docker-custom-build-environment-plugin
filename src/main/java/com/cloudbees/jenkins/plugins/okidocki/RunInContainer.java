@@ -16,6 +16,8 @@ public class RunInContainer extends InvisibleAction {
 
     private boolean enable;
 
+    public String image;
+
     public void afterSCM() {
         this.enable = true;
     }

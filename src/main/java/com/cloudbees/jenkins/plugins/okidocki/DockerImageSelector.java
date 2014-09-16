@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.plugins.okidocki;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.TaskListener;
 
 import java.io.IOException;
 
@@ -12,7 +13,7 @@ import java.io.IOException;
  */
 public abstract class DockerImageSelector extends AbstractDescribableImpl<DockerImageSelector> implements ExtensionPoint {
 
-    public abstract String prepareDockerImage(Docker docker, AbstractBuild build) throws IOException, InterruptedException;
+    public abstract String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException;
 
 
 
