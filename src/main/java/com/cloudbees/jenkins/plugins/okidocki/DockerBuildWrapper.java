@@ -78,8 +78,8 @@ public class DockerBuildWrapper extends BuildWrapper {
                 List<String> cmds = new ArrayList<String>();
                 cmds.add("docker");
                 cmds.add("run");
-                cmds.add("-rm");
-                cmds.add("-it");
+                cmds.add("--rm");
+                cmds.add("-t");
                 // mount workspace under same path in Docker container
                 cmds.add("-v");
                 cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
