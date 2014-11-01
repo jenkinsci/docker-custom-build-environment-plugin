@@ -9,7 +9,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -43,10 +42,11 @@ public class DockerBuildWrapper extends BuildWrapper {
         return new Environment() {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                RunInContainer action = build.getAction(RunInContainer.class);
+                BuiltInContainer action = build.getAction(BuiltInContainer.class);
                 if (action.container != null) {
                     listener.getLogger().println("Killing build container");
                     launcher.launch().cmds("docker", "kill", action.container).join();
+                    launcher.launch().cmds("docker", "rm", action.container).join();
                 }
                 return true;
             }
@@ -56,7 +56,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final RunInContainer runInContainer = new RunInContainer();
+        final BuiltInContainer runInContainer = new BuiltInContainer();
         build.addAction(runInContainer);
 
         return new Launcher.DecoratedLauncher(launcher) {
@@ -84,16 +84,15 @@ public class DockerBuildWrapper extends BuildWrapper {
                         List<String> cmds = new ArrayList<String>();
                         cmds.add("docker");
                         cmds.add("run");
-                        cmds.add("--rm");
-                        cmds.add("-t");
+                        cmds.add("-d");
                         // mount workspace under same path in Docker container
                         cmds.add("-v");
                         cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
                         // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
                         cmds.add("-v");
                         cmds.add(tmp + ":" + tmp + ":rw");
-                        cmds.add("sleep 100000"); // find some infinite command to run
                         cmds.add(runInContainer.image);
+                        cmds.add("sleep"); cmds.add("100000"); // find some infinite command to run
                         ByteArrayOutputStream bos = new ByteArrayOutputStream();
                         int s = launcher.launch().cmds(cmds).stdout(bos).join();
                         if (s != 0) {
