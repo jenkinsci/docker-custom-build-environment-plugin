@@ -9,12 +9,14 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,8 +38,19 @@ public class DockerBuildWrapper extends BuildWrapper {
     }
 
     @Override
-    public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        return new Environment() { };
+    public Environment setUp(AbstractBuild build, final Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
+        return new Environment() {
+            @Override
+            public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+                RunInContainer action = build.getAction(RunInContainer.class);
+                if (action.container != null) {
+                    listener.getLogger().println("Killing build container");
+                    launcher.launch().cmds("docker", "kill", action.container).join();
+                }
+                return true;
+            }
+        };
     }
 
 
@@ -59,34 +72,44 @@ public class DockerBuildWrapper extends BuildWrapper {
                     listener.getLogger().println("Prepare Docker image to host the build environment");
                     try {
                         runInContainer.image = selector.prepareDockerImage(docker, build, listener);
-                        build.addAction(new DockerBadge(runInContainer.image));
                     } catch (InterruptedException e) {
                         throw new RuntimeException("Interrupted");
                     }
                 }
 
-                String tmp;
-                try {
-                    tmp = build.getWorkspace().act(GetTmpdir);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("Interrupted");
-                }
+                if (runInContainer.container == null) {
+                    try {
+                        String tmp = build.getWorkspace().act(GetTmpdir);
 
-                // TODO start the container with a long running command, then use docker-enter
-                // would be great to use docker exec as described on https://github.com/docker/docker/issues/1437
+                        List<String> cmds = new ArrayList<String>();
+                        cmds.add("docker");
+                        cmds.add("run");
+                        cmds.add("--rm");
+                        cmds.add("-t");
+                        // mount workspace under same path in Docker container
+                        cmds.add("-v");
+                        cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
+                        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+                        cmds.add("-v");
+                        cmds.add(tmp + ":" + tmp + ":rw");
+                        cmds.add("sleep 100000"); // find some infinite command to run
+                        cmds.add(runInContainer.image);
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        int s = launcher.launch().cmds(cmds).stdout(bos).join();
+                        if (s != 0) {
+                            throw new IOException("failed to run container");
+                        }
+                        runInContainer.container = bos.toString();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException("Interrupted");
+                    }
+                }
 
                 List<String> cmds = new ArrayList<String>();
                 cmds.add("docker");
-                cmds.add("run");
-                cmds.add("--rm");
+                cmds.add("exec");
                 cmds.add("-t");
-                // mount workspace under same path in Docker container
-                cmds.add("-v");
-                cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
-                // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-                cmds.add("-v");
-                cmds.add(tmp + ":" + tmp + ":rw");
-                cmds.add(runInContainer.image);
+                cmds.add(runInContainer.container);
                 cmds.addAll(starter.cmds());
                 starter.cmds(cmds);
                 return super.launch(starter);
@@ -95,7 +118,6 @@ public class DockerBuildWrapper extends BuildWrapper {
     }
 
     private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
-        @Override
         public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
             return System.getProperty("java.io.tmpdir");
         }
