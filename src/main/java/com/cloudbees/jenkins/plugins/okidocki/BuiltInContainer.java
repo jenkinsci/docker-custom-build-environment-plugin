@@ -2,10 +2,8 @@ package com.cloudbees.jenkins.plugins.okidocki;
 
 import hudson.Extension;
 import hudson.model.BuildBadgeAction;
-import hudson.model.InvisibleAction;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.model.listeners.RunListener;
 import hudson.model.listeners.SCMListener;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
@@ -14,7 +12,7 @@ import hudson.scm.SCM;
  * Used to determine if launcher has to be decorated to execute in container, after SCM checkout completed.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class RunInContainer implements BuildBadgeAction {
+public class BuiltInContainer implements BuildBadgeAction {
 
     private boolean enable;
 
@@ -50,7 +48,7 @@ public class RunInContainer implements BuildBadgeAction {
     public static class Listener extends SCMListener {
         @Override
         public void onChangeLogParsed(Run<?, ?> build, SCM scm, TaskListener listener, ChangeLogSet<?> changelog) throws Exception {
-            RunInContainer runInContainer = build.getAction(RunInContainer.class);
+            BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
             if (runInContainer != null) runInContainer.afterSCM();
         }
     }
