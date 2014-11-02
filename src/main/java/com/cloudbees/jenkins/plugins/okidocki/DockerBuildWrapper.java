@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,14 +45,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         return new Environment() {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                BuiltInContainer action = build.getAction(BuiltInContainer.class);
-                if (action.container != null) {
-                    action.enable = false;
-                    listener.getLogger().println("Killing build container");
-                    launcher.launch().cmds("docker", "kill", action.container).join();
-                    launcher.launch().cmds("docker", "rm", action.container).join();
-                }
-                return true;
+                return build.getAction(BuiltInContainer.class).tearDown();
             }
         };
     }
@@ -59,10 +53,14 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final BuiltInContainer runInContainer = new BuiltInContainer();
+        final Docker docker = new Docker(launcher, listener);
+        final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
+        final String userId = whoAmI(launcher);
+
         return new Launcher.DecoratedLauncher(launcher) {
+
             @Override
             public Proc launch(ProcStarter starter) throws IOException {
 
@@ -70,7 +68,6 @@ public class DockerBuildWrapper extends BuildWrapper {
 
                 // TODO only run the container first time, then ns-enter for next commands to execute.
 
-                Docker docker = new Docker(launcher, listener);
                 if (runInContainer.image == null) {
                     listener.getLogger().println("Prepare Docker image to host the build environment");
                     try {
@@ -81,37 +78,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                 }
 
                 if (runInContainer.container == null) {
-                    try {
-                        String tmp = build.getWorkspace().act(GetTmpdir);
-
-                        List<String> cmds = new ArrayList<String>();
-                        cmds.add("docker");
-                        cmds.add("run");
-                        cmds.add("-d");
-                        // mount workspace under same path in Docker container
-                        cmds.add("-v");
-                        cmds.add(build.getWorkspace().getRemote() + ":/var/workspace:rw");
-                        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-                        cmds.add("-v");
-                        cmds.add(tmp + ":" + tmp + ":rw");
-
-                        EnvVars environment = build.getEnvironment(listener);
-                        for (Map.Entry<String, String> e : environment.entrySet()) {
-                            cmds.add("-e");
-                            cmds.add(e.getKey()+"=\""+e.getValue()+"\"");
-                        }
-
-                        cmds.add(runInContainer.image);
-                        cmds.add("sleep"); cmds.add("100000"); // find some infinite command to run
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        int s = launcher.launch().cmds(cmds).stdout(bos).join();
-                        if (s != 0) {
-                            throw new IOException("failed to run container");
-                        }
-                        runInContainer.container = bos.toString().trim();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException("Interrupted");
-                    }
+                    startBuildContainer();
                 }
 
                 List<String> cmds = new ArrayList<String>();
@@ -123,7 +90,34 @@ public class DockerBuildWrapper extends BuildWrapper {
                 starter.cmds(cmds);
                 return super.launch(starter);
             }
+
+            private void startBuildContainer() throws IOException {
+                try {
+                    String tmp = build.getWorkspace().act(GetTmpdir);
+                    EnvVars environment = build.getEnvironment(listener);
+
+                    Map<String, String> volumes = new HashMap<String, String>();
+                    // mount workspace in Docker container
+                    String workdir = build.getWorkspace().getRemote();
+                    volumes.put(workdir, "/var/workspace");
+                    // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+                    volumes.put(tmp,tmp);
+
+                    runInContainer.container =
+                        docker.runDetached(runInContainer.image, workdir, volumes, environment, userId,
+                                "sleep", "100000"); // TODO use a better long running command
+
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted");
+                }
+            }
         };
+    }
+
+    private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
+        return bos.toString().trim();
     }
 
     private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {

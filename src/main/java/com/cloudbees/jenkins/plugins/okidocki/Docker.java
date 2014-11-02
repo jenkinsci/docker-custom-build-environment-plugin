@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.plugins.okidocki;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
@@ -13,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -32,7 +34,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
                 .cmds("docker", "inspect", image)
-                .stdout(out).stderr(err).join();
+                .stdout(out).stderr(err).quiet(true).join();
         return status == 0;
     }
 
@@ -57,28 +59,38 @@ public class Docker {
         }
     }
 
-    public void run(String image, FilePath workspace, String user, String command) throws IOException, InterruptedException {
-
-        int status = launcher.launch()
-                .cmds("docker", "run", "-t",
-                        "-v", workspace.getRemote()+":/var/workspace:rw",
-                        image, command
-                     )
-                .writeStdin().stdout(listener.getLogger()).stderr(listener.getLogger()).join();
-
-        if (status != 0) {
-            throw new RuntimeException("Failed to run docker image");
-        }
-    }
-
-    public void stop(String container) throws IOException, InterruptedException {
+    public void kill(String container) throws IOException, InterruptedException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
-                .cmds("docker", "stop", container)
+                .cmds("docker", "kill", container)
                 .stdout(out).stderr(err).join();
         status = launcher.launch()
                 .cmds("docker", "rm", container)
                 .stdout(out).stderr(err).join();
+    }
+
+    public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
+
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("docker", "run", "-d", "-u", user, "-w", workdir);
+        for (Map.Entry<String, String> volume : volumes.entrySet()) {
+            args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
+        }
+        for (Map.Entry<String, String> e : environment.entrySet()) {
+            args.add("-e", e.getKey()+"=\""+e.getValue()+"\"");
+        }
+        args.add(image).add(command);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+
+        int status = launcher.launch()
+                .cmds(args).stdout(out).quiet(true).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to run docker image");
+        }
+        return out.toString("UTF-8").trim();
     }
 }

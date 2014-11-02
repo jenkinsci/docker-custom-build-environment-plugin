@@ -8,16 +8,22 @@ import hudson.model.listeners.SCMListener;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 
+import java.io.IOException;
+
 /**
  * Used to determine if launcher has to be decorated to execute in container, after SCM checkout completed.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class BuiltInContainer implements BuildBadgeAction {
 
-    boolean enable;
+    /* package */ String image;
+    /* package */ transient String container;
+    private transient boolean enable;
+    private final transient Docker docker;
 
-    public String image;
-    public String container;
+    public BuiltInContainer(Docker docker) {
+        this.docker = docker;
+    }
 
     public void afterSCM() {
         this.enable = true;
@@ -41,6 +47,15 @@ public class BuiltInContainer implements BuildBadgeAction {
 
     public String getUrlName() {
         return "/docker";
+    }
+
+    public boolean tearDown() throws IOException, InterruptedException {
+        if (container != null) {
+            enable = false;
+            docker.kill(container);
+        }
+        return true;
+
     }
 
 
