@@ -44,6 +44,7 @@ public class DockerBuildWrapper extends BuildWrapper {
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 BuiltInContainer action = build.getAction(BuiltInContainer.class);
                 if (action.container != null) {
+                    action.enable = false;
                     listener.getLogger().println("Killing build container");
                     launcher.launch().cmds("docker", "kill", action.container).join();
                     launcher.launch().cmds("docker", "rm", action.container).join();
@@ -98,7 +99,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                         if (s != 0) {
                             throw new IOException("failed to run container");
                         }
-                        runInContainer.container = bos.toString();
+                        runInContainer.container = bos.toString().trim();
                     } catch (InterruptedException e) {
                         throw new RuntimeException("Interrupted");
                     }

@@ -14,7 +14,7 @@ import hudson.scm.SCM;
  */
 public class BuiltInContainer implements BuildBadgeAction {
 
-    private boolean enable;
+    boolean enable;
 
     public String image;
     public String container;
