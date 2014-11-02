@@ -20,7 +20,8 @@ import java.util.Map;
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class Docker {
-    
+
+    private final static boolean DEBUG = Boolean.getBoolean(Docker.class.getName()+".debug");
     private final Launcher launcher;
     private final TaskListener listener;
 
@@ -34,7 +35,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
                 .cmds("docker", "inspect", image)
-                .stdout(out).stderr(err).quiet(true).join();
+                .stdout(out).stderr(err).quiet(!DEBUG).join();
         return status == 0;
     }
 
@@ -64,10 +65,10 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
                 .cmds("docker", "kill", container)
-                .stdout(out).stderr(err).join();
+                .stdout(out).stderr(err).quiet(!DEBUG).join();
         status = launcher.launch()
                 .cmds("docker", "rm", container)
-                .stdout(out).stderr(err).join();
+                .stdout(out).stderr(err).quiet(!DEBUG).join();
     }
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
@@ -86,7 +87,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         int status = launcher.launch()
-                .cmds(args).stdout(out).quiet(true).stderr(listener.getLogger()).join();
+                .cmds(args).stdout(out).quiet(!DEBUG).stderr(listener.getLogger()).join();
 
         if (status != 0) {
             throw new RuntimeException("Failed to run docker image");
