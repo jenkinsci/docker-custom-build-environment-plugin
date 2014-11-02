@@ -3,17 +3,11 @@ package com.cloudbees.jenkins.plugins.okidocki;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Proc;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
-import org.apache.commons.io.FileUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
 /**
@@ -21,7 +15,7 @@ import java.util.Map;
  */
 public class Docker {
 
-    private final static boolean DEBUG = Boolean.getBoolean(Docker.class.getName()+".debug");
+    private static boolean debug = Boolean.getBoolean(Docker.class.getName()+".debug");
     private final Launcher launcher;
     private final TaskListener listener;
 
@@ -35,7 +29,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
                 .cmds("docker", "inspect", image)
-                .stdout(out).stderr(err).quiet(!DEBUG).join();
+                .stdout(out).stderr(err).quiet(!debug).join();
         return status == 0;
     }
 
@@ -65,10 +59,10 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
                 .cmds("docker", "kill", container)
-                .stdout(out).stderr(err).quiet(!DEBUG).join();
+                .stdout(out).stderr(err).quiet(!debug).join();
         status = launcher.launch()
                 .cmds("docker", "rm", container)
-                .stdout(out).stderr(err).quiet(!DEBUG).join();
+                .stdout(out).stderr(err).quiet(!debug).join();
     }
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
@@ -87,7 +81,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         int status = launcher.launch()
-                .cmds(args).stdout(out).quiet(!DEBUG).stderr(listener.getLogger()).join();
+                .cmds(args).stdout(out).quiet(!debug).stderr(listener.getLogger()).join();
 
         if (status != 0) {
             throw new RuntimeException("Failed to run docker image");
