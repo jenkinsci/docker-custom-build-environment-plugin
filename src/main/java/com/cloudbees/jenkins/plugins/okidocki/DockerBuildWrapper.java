@@ -118,7 +118,11 @@ public class DockerBuildWrapper extends BuildWrapper {
     private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
-        return bos.toString().trim();
+
+        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
+        return bos.toString().trim()+":"+bos2.toString().trim();
+
     }
 
     private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
