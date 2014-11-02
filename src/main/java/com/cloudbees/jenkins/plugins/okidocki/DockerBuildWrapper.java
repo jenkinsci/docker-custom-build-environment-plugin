@@ -98,15 +98,18 @@ public class DockerBuildWrapper extends BuildWrapper {
                     EnvVars environment = build.getEnvironment(listener);
 
                     Map<String, String> volumes = new HashMap<String, String>();
+
                     // mount workspace in Docker container
+                    // use same path in slave and container so `$WORKSPACE` used in scripts will match
                     String workdir = build.getWorkspace().getRemote();
-                    volumes.put(workdir, "/var/workspace");
+                    volumes.put(workdir, workdir);
+
                     // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
                     volumes.put(tmp,tmp);
 
                     runInContainer.container =
                         docker.runDetached(runInContainer.image, workdir, volumes, environment, userId,
-                                "sleep", "100000"); // TODO use a better long running command
+                                "cat"); // Command expected to hung until killed
 
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Interrupted");

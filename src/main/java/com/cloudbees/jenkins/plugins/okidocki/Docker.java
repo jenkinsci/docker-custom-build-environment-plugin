@@ -60,20 +60,26 @@ public class Docker {
         int status = launcher.launch()
                 .cmds("docker", "kill", container)
                 .stdout(out).stderr(err).quiet(!debug).join();
+        if (status != 0)
+            throw new RuntimeException("Failed to stop docker container "+container);
+
         status = launcher.launch()
                 .cmds("docker", "rm", container)
                 .stdout(out).stderr(err).quiet(!debug).join();
+        if (status != 0)
+            throw new RuntimeException("Failed to remove docker container "+container);
     }
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("docker", "run", "-d", "-u", user, "-w", workdir);
+        args.add("docker", "run", "-t", "-d", "-u", user, "-w", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
         for (Map.Entry<String, String> e : environment.entrySet()) {
-            args.add("-e", e.getKey()+"=\""+e.getValue()+"\"");
+            args.add("-e");
+            args.addMasked(e.getKey()+"="+e.getValue());
         }
         args.add(image).add(command);
 
