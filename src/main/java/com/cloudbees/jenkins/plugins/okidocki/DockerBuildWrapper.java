@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.plugins.okidocki;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -92,6 +94,13 @@ public class DockerBuildWrapper extends BuildWrapper {
                         // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
                         cmds.add("-v");
                         cmds.add(tmp + ":" + tmp + ":rw");
+
+                        EnvVars environment = build.getEnvironment(listener);
+                        for (Map.Entry<String, String> e : environment.entrySet()) {
+                            cmds.add("-e");
+                            cmds.add(e.getKey()+"=\""+e.getValue()+"\"");
+                        }
+
                         cmds.add(runInContainer.image);
                         cmds.add("sleep"); cmds.add("100000"); // find some infinite command to run
                         ByteArrayOutputStream bos = new ByteArrayOutputStream();
