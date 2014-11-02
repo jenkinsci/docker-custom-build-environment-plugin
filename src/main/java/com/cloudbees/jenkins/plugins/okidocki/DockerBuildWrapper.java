@@ -81,6 +81,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                     listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
                 }
 
+                // TODO need some way to know the command execution status, see https://github.com/docker/docker/issues/8703
                 List<String> cmds = new ArrayList<String>();
                 cmds.add("docker");
                 cmds.add("exec");
