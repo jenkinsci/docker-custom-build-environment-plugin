@@ -20,27 +20,32 @@ import java.util.Formatter;
  */
 public class DockerfileImageSelector extends DockerImageSelector {
 
-    private String dockerfile;
+    private String contextPath;
 
     @DataBoundConstructor
-    public DockerfileImageSelector(String dockerfile) {
-        this.dockerfile = dockerfile;
+    public DockerfileImageSelector(String contextPath) {
+        this.contextPath = contextPath;
     }
 
     @Override
     public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
 
-        FilePath filePath = build.getWorkspace().child(dockerfile);
+        FilePath filePath = build.getWorkspace().child(contextPath);
 
-        String hash = build.getWorkspace().act(new ComputeChecksum());
+        String hash = filePath.act(new ComputeDockerfileChecksum());
 
         // search for a tagged image with this hash ID
         if (!docker.hasImage(hash)) {
-            listener.getLogger().println("Build Docker image from "+dockerfile+" ...");
-            docker.buildImage(build.getWorkspace(), hash);
+            listener.getLogger().println("Build Docker image from "+contextPath+"/Dockerfile ...");
+            docker.buildImage(filePath, hash);
         }
 
         return hash;
+    }
+
+
+    public String getContextPath() {
+        return contextPath;
     }
 
     @Extension
@@ -52,7 +57,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         }
     }
 
-    public static class ComputeChecksum implements hudson.FilePath.FileCallable<String> {
+    public static class ComputeDockerfileChecksum implements hudson.FilePath.FileCallable<String> {
 
         public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
             MessageDigest md = null;
@@ -61,7 +66,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException("Slave JVM doesn't support SHA-1 MessageDigest");
             }
-            byte[] content = FileUtils.readFileToByteArray(f);
+            byte[] content = FileUtils.readFileToByteArray(new File(f, "Dockerfile"));
             byte[] digest = md.digest(content);
             Formatter formatter = new Formatter();
             for (byte b : digest) {
