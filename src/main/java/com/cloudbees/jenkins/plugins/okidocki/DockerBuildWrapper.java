@@ -69,7 +69,6 @@ public class DockerBuildWrapper extends BuildWrapper {
                 // TODO only run the container first time, then ns-enter for next commands to execute.
 
                 if (runInContainer.image == null) {
-                    listener.getLogger().println("Prepare Docker image to host the build environment");
                     try {
                         runInContainer.image = selector.prepareDockerImage(docker, build, listener);
                     } catch (InterruptedException e) {
@@ -79,6 +78,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
                 if (runInContainer.container == null) {
                     startBuildContainer();
+                    listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
                 }
 
                 List<String> cmds = new ArrayList<String>();
