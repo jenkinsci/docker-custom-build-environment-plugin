@@ -15,6 +15,4 @@ public abstract class DockerImageSelector extends AbstractDescribableImpl<Docker
 
     public abstract String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException;
 
-
-
 }
