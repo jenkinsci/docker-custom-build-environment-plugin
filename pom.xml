@@ -8,7 +8,7 @@
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>oki-docki</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
@@ -30,7 +30,7 @@
     <url>https://github.com/jenkinsci/oki-docki-plugin</url>
     <connection>scm:git:https://github.com/jenkinsci/oki-docki-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/oki-docki-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>oki-docki-1.1</tag>
   </scm>
 
   <build>
