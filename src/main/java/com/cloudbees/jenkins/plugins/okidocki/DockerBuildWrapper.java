@@ -13,6 +13,7 @@ import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ArgumentListBuilder;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -82,13 +83,17 @@ public class DockerBuildWrapper extends BuildWrapper {
                 }
 
                 // TODO need some way to know the command execution status, see https://github.com/docker/docker/issues/8703
-                List<String> cmds = new ArrayList<String>();
-                cmds.add("docker");
-                cmds.add("exec");
-                cmds.add("-t");
-                cmds.add(runInContainer.container);
-                cmds.addAll(starter.cmds());
-                starter.cmds(cmds);
+                ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
+                cmdBuilder.add("docker", "exec", "-t", runInContainer.container);
+
+                List<String> originalCmds = starter.cmds();
+                boolean[] originalMask = starter.masks();
+                for (int i = 0; i < originalCmds.size(); i++) {
+                    boolean masked = originalMask == null ? false : i < originalMask.length ? originalMask[i] : false;
+                    cmdBuilder.add(originalCmds.get(i), masked);
+                }
+
+                starter.cmds(cmdBuilder);
                 return super.launch(starter);
             }
 
