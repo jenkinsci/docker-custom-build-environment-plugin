@@ -1,5 +1,4 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <h1>Docker !</h1>
     <f:nested>
       <f:hetero-radio field="selector" hasHeader="true"
                       descriptors="${descriptor.selectors()}" />
