@@ -79,6 +79,9 @@ public class Docker {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
         for (Map.Entry<String, String> e : environment.entrySet()) {
+            if ("HOSTNAME".equals(e.getKey())) {
+                continue;
+            }
             args.add("-e");
             args.addMasked(e.getKey()+"="+e.getValue());
         }
