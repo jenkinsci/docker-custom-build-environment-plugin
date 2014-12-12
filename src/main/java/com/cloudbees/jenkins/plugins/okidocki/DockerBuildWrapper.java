@@ -20,11 +20,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -103,17 +99,28 @@ public class DockerBuildWrapper extends BuildWrapper {
                     EnvVars environment = build.getEnvironment(listener);
 
                     Map<String, String> volumes = new HashMap<String, String>();
+                    Collection<String> volumesFrom;
 
-                    // mount workspace in Docker container
-                    // use same path in slave and container so `$WORKSPACE` used in scripts will match
+                    String container = build.getWorkspace().act(GetContainer);
                     String workdir = build.getWorkspace().getRemote();
-                    volumes.put(workdir, workdir);
 
-                    // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-                    volumes.put(tmp,tmp);
+                    if (container != null) {
+                        // Running inside a container: no volumes and volumes-from
+                        volumesFrom = Collections.singleton(container);
+                    }
+                    else {
+                        // Running outside of a container: volumes and no volumes-from
+                        volumesFrom = Collections.emptyList();
+                        // mount workspace in Docker container
+                        // use same path in slave and container so `$WORKSPACE` used in scripts will match
+                        volumes.put(workdir, workdir);
+
+                        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+                        volumes.put(tmp,tmp);
+                    }
 
                     runInContainer.container =
-                        docker.runDetached(runInContainer.image, workdir, volumes, environment, userId,
+                        docker.runDetached(runInContainer.image, workdir, volumes, volumesFrom, environment, userId,
                                 "cat"); // Command expected to hung until killed
 
                 } catch (InterruptedException e) {
@@ -136,6 +143,12 @@ public class DockerBuildWrapper extends BuildWrapper {
     private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
         public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
             return System.getProperty("java.io.tmpdir");
+        }
+    };
+
+    private static FilePath.FileCallable<String> GetContainer = new FilePath.FileCallable<String>() {
+        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+            return System.getProperty("oki-docki.running.from.container");
         }
     };
 

@@ -8,6 +8,7 @@ import hudson.util.ArgumentListBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -70,7 +71,7 @@ public class Docker {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, Collection<String> volumesFrom, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add("docker", "run", "-t", "-d", "-u", user, "-w", workdir);
@@ -78,8 +79,15 @@ public class Docker {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
         for (Map.Entry<String, String> e : environment.entrySet()) {
+            if ("HOSTNAME".equals(e.getKey())) {
+                continue;
+            }
             args.add("-e");
             args.addMasked(e.getKey()+"="+e.getValue());
+        }
+        for (String container : volumesFrom) {
+            args.add("--volumes-from");
+            args.add(container);
         }
         args.add(image).add(command);
 
