@@ -54,8 +54,6 @@ public class DockerBuildWrapper extends BuildWrapper {
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
-        final String userId = whoAmI(launcher);
-
         return new Launcher.DecoratedLauncher(launcher) {
 
             @Override
@@ -120,7 +118,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                     }
 
                     runInContainer.container =
-                        docker.runDetached(runInContainer.image, workdir, volumes, volumesFrom, environment, userId,
+                        docker.runDetached(runInContainer.image, workdir, volumes, volumesFrom, environment,
                                 "cat"); // Command expected to hung until killed
 
                 } catch (InterruptedException e) {
@@ -128,16 +126,6 @@ public class DockerBuildWrapper extends BuildWrapper {
                 }
             }
         };
-    }
-
-    private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
-
-        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
-        launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
-        return bos.toString().trim()+":"+bos2.toString().trim();
-
     }
 
     private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
