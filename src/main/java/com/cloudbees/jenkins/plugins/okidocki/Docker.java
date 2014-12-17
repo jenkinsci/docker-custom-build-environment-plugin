@@ -71,10 +71,10 @@ public class Docker {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, Collection<String> volumesFrom, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, Collection<String> volumesFrom, EnvVars environment, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("docker", "run", "-t", "-d", "-u", user, "-w", workdir);
+        args.add("docker", "run", "-t", "-d", "-w", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
