@@ -63,6 +63,7 @@ public class Docker {
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
 
+        listener.getLogger().println("Removing Docker container after build completion");
         status = launcher.launch()
                 .cmds("docker", "rm", container)
                 .stdout(out).stderr(err).quiet(!debug).join();

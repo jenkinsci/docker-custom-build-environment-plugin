@@ -25,11 +25,15 @@ public class BuiltInContainer implements BuildBadgeAction {
         this.docker = docker;
     }
 
-    public void afterSCM() {
-        this.enable = true;
+    public void enable() {
+        enable(true);
     }
 
-    public boolean enabled() {
+    public void enable(boolean enable) {
+        this.enable = enable;
+    }
+
+    public boolean isEnabled() {
         return enable;
     }
 
@@ -64,7 +68,7 @@ public class BuiltInContainer implements BuildBadgeAction {
         @Override
         public void onChangeLogParsed(Run<?, ?> build, SCM scm, TaskListener listener, ChangeLogSet<?> changelog) throws Exception {
             BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
-            if (runInContainer != null) runInContainer.afterSCM();
+            if (runInContainer != null) runInContainer.enable();
         }
     }
 
