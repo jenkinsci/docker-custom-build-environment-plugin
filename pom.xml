@@ -19,6 +19,12 @@
     </repository>
   </repositories>
 
+  <licenses>
+      <license>
+          <name>MIT</name>
+      </license>
+  </licenses>
+
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
