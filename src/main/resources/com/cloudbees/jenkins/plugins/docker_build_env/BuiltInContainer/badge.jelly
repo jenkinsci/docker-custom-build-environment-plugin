@@ -1,4 +1,4 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-   <img title="Built on Docker"
-        src="${rootURL}/plugin/oki-docki/images/docker-badge.png"/>
+   <img title="Built inside Docker container"
+        src="${rootURL}/plugin/cloudbees-docker-custom-build-environment/images/docker-badge.png"/>
 </j:jelly>

@@ -1,5 +1,6 @@
 <div>
-  Execute build inside a <a href="http://www.docker.io">Docker container</a>.
+  Execute build inside a <a href="http://www.docker.io">Docker container</a>. This allows full control on
+  build environment by the development team, and full isolation between jobs and concurrent builds.
   <p>
   The SCM checkout will occur on the build slave as with a standard jenkins build,
   but all later build steps will execute within the container. The project workspace is mounted inside

@@ -2,5 +2,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  Run builds inside a docker container, defined by Dockerfile from project SCM
+  Run builds inside a docker container, defined by a Docker image or Dockerfile stored in project SCM.
 </div>

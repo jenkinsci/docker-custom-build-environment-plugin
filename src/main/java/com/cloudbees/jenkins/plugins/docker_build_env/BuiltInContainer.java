@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.okidocki;
+package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
 import hudson.model.BuildBadgeAction;
@@ -38,7 +38,7 @@ public class BuiltInContainer implements BuildBadgeAction {
     }
 
     public String getIconFileName() {
-        return "/plugin/oki-docki/docker-badge.png";
+        return "/plugin/cloudbees-docker-custom-build-environment/docker-badge.png";
     }
 
     public String getImage() {

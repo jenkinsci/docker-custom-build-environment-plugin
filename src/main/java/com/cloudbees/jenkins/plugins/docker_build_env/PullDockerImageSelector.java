@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.okidocki;
+package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
 import hudson.model.AbstractBuild;
