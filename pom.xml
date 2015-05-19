@@ -7,9 +7,11 @@
   </parent>
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
-  <artifactId>cloudbees-docker-custom-build-environment</artifactId>
+  <artifactId>docker-custom-build-environment</artifactId>
+  <name>CloudBees Docker Custom Build Environment Plugin</name>
   <version>1.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
