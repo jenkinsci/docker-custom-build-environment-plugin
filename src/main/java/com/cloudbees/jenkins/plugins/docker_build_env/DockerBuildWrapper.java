@@ -5,7 +5,9 @@ import hudson.Launcher;
 import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.docker.commons.DockerTool;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -19,13 +21,21 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final DockerImageSelector selector;
 
+    private final String dockerInstallation;
+
+
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation) {
         this.selector = selector;
+        this.dockerInstallation = dockerInstallation;
     }
 
     public DockerImageSelector getSelector() {
         return selector;
+    }
+
+    public String getDockerInstallation() {
+        return dockerInstallation;
     }
 
     @Override
@@ -41,8 +51,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-
-        final Docker docker = new Docker(launcher, listener);
+        final Docker docker = new Docker(dockerInstallation, build, launcher, listener);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 

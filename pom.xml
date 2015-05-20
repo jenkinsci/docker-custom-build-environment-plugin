@@ -11,21 +11,31 @@
   <name>CloudBees Docker Custom Build Environment Plugin</name>
   <version>1.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/CloudBees+Docker+Custom+Build+Environment+Plugin</url>
 
-  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
+  <licenses>
+    <license>
+      <name>MIT</name>
+    </license>
+  </licenses>
+
+  <dependencies>
+      <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>docker-commons</artifactId>
+          <version>1.0-alpha-14-SNAPSHOT</version>
+      </dependency>  
+  </dependencies>
+
+
+
+    <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
-
-  <licenses>
-      <license>
-          <name>MIT</name>
-      </license>
-  </licenses>
 
   <pluginRepositories>
     <pluginRepository>

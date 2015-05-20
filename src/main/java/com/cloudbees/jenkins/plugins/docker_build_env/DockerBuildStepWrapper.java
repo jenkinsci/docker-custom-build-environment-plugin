@@ -9,7 +9,9 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tools.ToolDescriptor;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.docker.commons.DockerTool;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -26,10 +28,13 @@ public class DockerBuildStepWrapper extends Builder {
 
     private final List<BuildStep> builders;
 
+    private final String dockerInstallation;
+
     @DataBoundConstructor
-    public DockerBuildStepWrapper(DockerImageSelector selector, List<BuildStep> builders) {
+    public DockerBuildStepWrapper(DockerImageSelector selector, List<BuildStep> builders, String dockerInstallation) {
         this.selector = selector;
         this.builders = builders;
+        this.dockerInstallation = dockerInstallation;
     }
 
     public DockerImageSelector getSelector() {
@@ -40,9 +45,13 @@ public class DockerBuildStepWrapper extends Builder {
         return builders;
     }
 
+    public String getDockerInstallation() {
+        return dockerInstallation;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        final Docker docker = new Docker(launcher, listener);
+        final Docker docker = new Docker(dockerInstallation, build, launcher, listener);
         BuiltInContainer runInContainer = new BuiltInContainer(docker);
         runInContainer.enable();
         DockerDecoratedLauncher l = new DockerDecoratedLauncher(selector, launcher, runInContainer, docker, build);
@@ -85,7 +94,6 @@ public class DockerBuildStepWrapper extends Builder {
             }
             return descriptors;
         }
-
 
     }
 }
