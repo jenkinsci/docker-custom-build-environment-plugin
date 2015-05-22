@@ -35,7 +35,7 @@ public class PullDockerImageSelector extends DockerImageSelector {
 
         @Override
         public String getDisplayName() {
-            return "Pull docker image";
+            return "Pull docker image from repository";
         }
     }
 }

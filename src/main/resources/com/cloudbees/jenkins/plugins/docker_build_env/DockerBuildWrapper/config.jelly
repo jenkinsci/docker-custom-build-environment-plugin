@@ -23,10 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:d="/org/jenkinsci/plugins/docker/commons">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:d="/lib/docker/commons" xmlns:c="/lib/credentials">
     <f:nested>
-        <f:hetero-radio field="selector" hasHeader="true"
-                      descriptors="${descriptor.selectors()}" />
+        <f:entry title="Docker image to use">
+            <f:hetero-radio field="selector" descriptors="${descriptor.selectors()}" />
+        </f:entry>
+
+        <f:property field="dockerHost"/>
 
         <d:selectDockerTool field="dockerInstallation"/>
 

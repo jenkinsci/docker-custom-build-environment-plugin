@@ -23,8 +23,8 @@
       <dependency>
           <groupId>org.jenkins-ci.plugins</groupId>
           <artifactId>docker-commons</artifactId>
-          <version>1.0-alpha-14-SNAPSHOT</version>
-      </dependency>  
+          <version>1.0-alpha-15-SNAPSHOT</version>
+      </dependency>
   </dependencies>
 
 

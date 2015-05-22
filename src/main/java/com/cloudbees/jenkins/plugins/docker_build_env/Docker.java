@@ -7,32 +7,52 @@ import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
-import org.jenkinsci.plugins.docker.commons.DockerTool;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class Docker {
+public class Docker implements Closeable {
 
     private static boolean debug = Boolean.getBoolean(Docker.class.getName()+".debug");
     private final Launcher launcher;
     private final TaskListener listener;
     private final String dockerExecutable;
+    private final DockerServerEndpoint dockerHost;
 
-    public Docker(String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.launcher = launcher;
         this.listener = listener;
+        this.dockerHost = dockerHost;
+    }
+
+
+    private KeyMaterial dockerEnv;
+
+    public void setup(AbstractBuild build) throws IOException, InterruptedException {
+        this.dockerEnv = dockerHost.newKeyMaterialFactory(build).materialize();
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        dockerEnv.close();
     }
 
     public boolean hasImage(String image) throws IOException, InterruptedException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
+
         int status = launcher.launch()
+                .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "inspect", image)
                 .stdout(out).stderr(err).quiet(!debug).join();
         return status == 0;
@@ -42,6 +62,7 @@ public class Docker {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
+                .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "pull", image)
                 .stdout(out).stderr(err).join();
         return status == 0;
@@ -52,6 +73,7 @@ public class Docker {
 
         int status = launcher.launch()
                 .pwd(workspace.getRemote())
+                .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "build", "-t", tag, ".")
                 .stdout(listener.getLogger()).stderr(listener.getLogger()).join();
         if (status != 0) {
@@ -63,6 +85,7 @@ public class Docker {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int status = launcher.launch()
+                .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "kill", container)
                 .stdout(out).stderr(err).quiet(!debug).join();
         if (status != 0)
@@ -70,6 +93,7 @@ public class Docker {
 
         listener.getLogger().println("Removing Docker container after build completion");
         status = launcher.launch()
+                .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "rm", container)
                 .stdout(out).stderr(err).quiet(!debug).join();
         if (status != 0)
@@ -96,6 +120,7 @@ public class Docker {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         int status = launcher.launch()
+                .envs(dockerEnv.env())
                 .cmds(args).stdout(out).quiet(!debug).stderr(listener.getLogger()).join();
 
         if (status != 0) {

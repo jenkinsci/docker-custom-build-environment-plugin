@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -17,6 +18,7 @@ import java.io.IOException;
 public class BuiltInContainer implements BuildBadgeAction {
 
     /* package */ String image;
+
     /* package */ transient String container;
     private transient boolean enable;
     private final transient Docker docker;
@@ -53,6 +55,10 @@ public class BuiltInContainer implements BuildBadgeAction {
         return "/docker";
     }
 
+    Docker getDocker() {
+        return docker;
+    }
+
     public boolean tearDown() throws IOException, InterruptedException {
         if (container != null) {
             enable = false;
@@ -61,7 +67,6 @@ public class BuiltInContainer implements BuildBadgeAction {
         return true;
 
     }
-
 
     @Extension
     public static class Listener extends SCMListener {

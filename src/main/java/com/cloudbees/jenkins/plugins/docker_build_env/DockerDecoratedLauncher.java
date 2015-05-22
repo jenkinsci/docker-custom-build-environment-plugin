@@ -20,15 +20,13 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
     private final DockerImageSelector selector;
     private final BuiltInContainer runInContainer;
-    private final Docker docker;
     private final AbstractBuild build;
     private final String userId;
 
-    public DockerDecoratedLauncher(DockerImageSelector selector, Launcher launcher, BuiltInContainer runInContainer, Docker docker, AbstractBuild build) throws IOException, InterruptedException {
+    public DockerDecoratedLauncher(DockerImageSelector selector, Launcher launcher, BuiltInContainer runInContainer, AbstractBuild build) throws IOException, InterruptedException {
         super(launcher);
         this.selector = selector;
         this.runInContainer = runInContainer;
-        this.docker = docker;
         this.build = build;
         this.userId = whoAmI(launcher);
     }
@@ -47,7 +45,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
         if (runInContainer.image == null) {
             try {
-                runInContainer.image = selector.prepareDockerImage(docker, build, listener);
+                runInContainer.image = selector.prepareDockerImage(runInContainer.getDocker(), build, listener);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Interrupted");
             }
@@ -89,7 +87,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             volumes.put(tmp,tmp);
 
             runInContainer.container =
-                docker.runDetached(runInContainer.image, workdir, volumes, environment, userId,
+                    runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, environment, userId,
                         "cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
