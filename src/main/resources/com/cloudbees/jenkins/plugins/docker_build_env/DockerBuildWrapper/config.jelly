@@ -29,9 +29,10 @@ THE SOFTWARE.
             <f:hetero-radio field="selector" descriptors="${descriptor.selectors()}" />
         </f:entry>
 
-        <f:property field="dockerHost"/>
-
-        <d:selectDockerTool field="dockerInstallation"/>
+        <f:advanced>
+            <f:property field="dockerHost"/>
+            <d:selectDockerTool field="dockerInstallation"/>
+        </f:advanced>
 
     </f:nested>
 </j:jelly>
