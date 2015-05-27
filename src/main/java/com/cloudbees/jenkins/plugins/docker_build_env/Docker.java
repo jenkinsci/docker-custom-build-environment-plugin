@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -127,5 +128,21 @@ public class Docker implements Closeable {
             throw new RuntimeException("Failed to run docker image");
         }
         return out.toString("UTF-8").trim();
+    }
+
+    public void executeIn(String container, Launcher.ProcStarter starter) {
+        List<String> originalCmds = starter.cmds();
+
+        ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
+        cmdBuilder.add(dockerExecutable,"exec", "-t", container);
+
+        boolean[] originalMask = starter.masks();
+        for (int i = 0; i < originalCmds.size(); i++) {
+            boolean masked = originalMask == null ? false : i < originalMask.length ? originalMask[i] : false;
+            cmdBuilder.add(originalCmds.get(i), masked);
+        }
+
+        starter.cmds(cmdBuilder);
+        starter.envs(dockerEnv.env());
     }
 }

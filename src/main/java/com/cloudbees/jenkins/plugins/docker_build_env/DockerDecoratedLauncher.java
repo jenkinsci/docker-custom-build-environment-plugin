@@ -56,18 +56,8 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
         }
 
-        // TODO need some way to know the command execution status, see https://github.com/docker/docker/issues/8703
-        ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
-        cmdBuilder.add("docker", "exec", "-t", runInContainer.container);
+        runInContainer.getDocker().executeIn(runInContainer.container, starter);
 
-        List<String> originalCmds = starter.cmds();
-        boolean[] originalMask = starter.masks();
-        for (int i = 0; i < originalCmds.size(); i++) {
-            boolean masked = originalMask == null ? false : i < originalMask.length ? originalMask[i] : false;
-            cmdBuilder.add(originalCmds.get(i), masked);
-        }
-
-        starter.cmds(cmdBuilder);
         return super.launch(starter);
     }
 
@@ -88,7 +78,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
             runInContainer.container =
                     runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, environment, userId,
-                        "cat"); // Command expected to hung until killed
+                            "cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted");
