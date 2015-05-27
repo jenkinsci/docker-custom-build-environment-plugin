@@ -101,18 +101,24 @@ public class Docker implements Closeable {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, EnvVars environment, String user, String ... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(dockerExecutable, "run", "-t", "-d", "-u", user, "-w", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
-            args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw" );
+            args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
+        }
+        for (Map.Entry<Integer, Integer> port : ports.entrySet()) {
+            args.add("--publish", port.getKey() + ":" + port.getValue());
+        }
+        for (Map.Entry<String, String> link : links.entrySet()) {
+            args.add("--link", link.getKey() + ":" + link.getValue());
         }
         for (Map.Entry<String, String> e : environment.entrySet()) {
             if ("HOSTNAME".equals(e.getKey())) {
                 continue;
             }
-            args.add("-e");
+            args.add("--env");
             args.addMasked(e.getKey()+"="+e.getValue());
         }
         args.add(image).add(command);

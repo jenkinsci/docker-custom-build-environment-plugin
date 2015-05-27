@@ -67,6 +67,8 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             EnvVars environment = build.getEnvironment(listener);
 
             Map<String, String> volumes = new HashMap<String, String>();
+            Map<String, String> links = new HashMap<String, String>();
+            Map<Integer, Integer> ports = new HashMap<Integer, Integer>();
 
             // mount workspace in Docker container
             // use same path in slave and container so `$WORKSPACE` used in scripts will match
@@ -77,7 +79,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             volumes.put(tmp,tmp);
 
             runInContainer.container =
-                    runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, environment, userId,
+                    runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, ports, links, environment, userId,
                             "cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
