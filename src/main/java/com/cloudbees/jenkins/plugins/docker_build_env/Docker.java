@@ -85,6 +85,7 @@ public class Docker implements Closeable {
     public void kill(String container) throws IOException, InterruptedException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
+        listener.getLogger().println("Stopping Docker container after build completion");
         int status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "kill", container)
@@ -92,7 +93,6 @@ public class Docker implements Closeable {
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
 
-        listener.getLogger().println("Removing Docker container after build completion");
         status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "rm", container)
