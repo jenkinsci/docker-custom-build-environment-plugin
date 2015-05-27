@@ -88,6 +88,8 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
+            if (Jenkins.getInstance().getPlugin("maven-plugin") != null)
+                return ! hudson.maven.AbstractMavenProject.class.isInstance(item);
             return true;
         }
 

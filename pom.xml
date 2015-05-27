@@ -25,6 +25,12 @@
           <artifactId>docker-commons</artifactId>
           <version>1.0-alpha-15-SNAPSHOT</version>
       </dependency>
+      <dependency>
+          <groupId>org.jenkins-ci.main</groupId>
+          <artifactId>maven-plugin</artifactId>
+          <version>2.9</version>
+          <optional>true</optional>
+      </dependency>
   </dependencies>
 
 
