@@ -24,12 +24,15 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final DockerServerEndpoint dockerHost;
 
+    private final boolean verbose;
+
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, boolean verbose) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
+        this.verbose = verbose;
     }
 
     public DockerImageSelector getSelector() {
@@ -44,9 +47,13 @@ public class DockerBuildWrapper extends BuildWrapper {
         return dockerHost;
     }
 
+    public boolean isVerbose() {
+        return verbose;
+    }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, build, launcher, listener);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, build, launcher, listener, verbose);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 

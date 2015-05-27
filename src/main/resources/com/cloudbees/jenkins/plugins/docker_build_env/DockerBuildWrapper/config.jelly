@@ -32,6 +32,9 @@ THE SOFTWARE.
         <f:advanced>
             <f:property field="dockerHost"/>
             <d:selectDockerTool field="dockerInstallation"/>
+            <f:entry field="verbose" title="Verbose">
+                <f:checkbox/>
+            </f:entry>
         </f:advanced>
 
     </f:nested>

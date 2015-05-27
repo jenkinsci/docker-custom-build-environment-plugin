@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -27,12 +28,14 @@ public class Docker implements Closeable {
     private final TaskListener listener;
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
+    private final boolean verbose;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose) throws IOException, InterruptedException {
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.launcher = launcher;
         this.listener = listener;
         this.dockerHost = dockerHost;
+        this.verbose = verbose | debug;
     }
 
 
@@ -49,19 +52,19 @@ public class Docker implements Closeable {
     }
 
     public boolean hasImage(String image) throws IOException, InterruptedException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
+        OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "inspect", image)
-                .stdout(out).stderr(err).quiet(!debug).join();
+                .stdout(out).stderr(err).quiet(!verbose).join();
         return status == 0;
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
+        OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "pull", image)
@@ -71,32 +74,34 @@ public class Docker implements Closeable {
 
 
     public void buildImage(FilePath workspace, String tag) throws IOException, InterruptedException {
+        OutputStream out = listener.getLogger();
+        OutputStream err = listener.getLogger();
 
         int status = launcher.launch()
                 .pwd(workspace.getRemote())
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "build", "-t", tag, ".")
-                .stdout(listener.getLogger()).stderr(listener.getLogger()).join();
+                .cmds(dockerExecutable, "build", "--tag", tag, ".")
+                .stdout(out).stderr(err).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");
         }
     }
 
     public void kill(String container) throws IOException, InterruptedException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
+        OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         listener.getLogger().println("Stopping Docker container after build completion");
         int status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "kill", container)
-                .stdout(out).stderr(err).quiet(!debug).join();
+                .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
 
         status = launcher.launch()
                 .envs(dockerEnv.env())
                 .cmds(dockerExecutable, "rm", container)
-                .stdout(out).stderr(err).quiet(!debug).join();
+                .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to remove docker container "+container);
     }
@@ -104,7 +109,9 @@ public class Docker implements Closeable {
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(dockerExecutable, "run", "-t", "-d", "-u", user, "-w", workdir);
+        args.add(dockerExecutable, "run", "--tty", "--detach");
+        args.add("--user", user);
+        args.add( "--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
@@ -124,11 +131,10 @@ public class Docker implements Closeable {
         args.add(image).add(command);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(args).stdout(out).quiet(!debug).stderr(listener.getLogger()).join();
+                .cmds(args).stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
 
         if (status != 0) {
             throw new RuntimeException("Failed to run docker image");
@@ -140,7 +146,7 @@ public class Docker implements Closeable {
         List<String> originalCmds = starter.cmds();
 
         ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
-        cmdBuilder.add(dockerExecutable,"exec", "-t", container);
+        cmdBuilder.add(dockerExecutable,"exec", "--tty", container);
 
         boolean[] originalMask = starter.masks();
         for (int i = 0; i < originalCmds.size(); i++) {
