@@ -78,6 +78,10 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
             volumes.put(tmp,tmp);
 
+            for (Integer port : runInContainer.getPorts()) {
+                ports.put(port, port);
+            }
+
             runInContainer.container =
                     runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, ports, links, environment, userId,
                             "cat"); // Command expected to hung until killed

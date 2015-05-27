@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -10,6 +9,8 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Used to determine if launcher has to be decorated to execute in container, after SCM checkout completed.
@@ -22,6 +23,7 @@ public class BuiltInContainer implements BuildBadgeAction {
     /* package */ transient String container;
     private transient boolean enable;
     private final transient Docker docker;
+    private List<Integer> ports = new ArrayList<Integer>();
 
     public BuiltInContainer(Docker docker) {
         this.docker = docker;
@@ -66,6 +68,10 @@ public class BuiltInContainer implements BuildBadgeAction {
         }
         return true;
 
+    }
+
+    public List<Integer> getPorts() {
+        return ports;
     }
 
     @Extension
