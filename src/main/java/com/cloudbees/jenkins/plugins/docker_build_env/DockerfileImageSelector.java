@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import org.apache.commons.io.FileUtils;
@@ -13,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Formatter;
 
 /**
@@ -44,6 +47,11 @@ public class DockerfileImageSelector extends DockerImageSelector {
         return hash;
     }
 
+    @Override
+    public Collection<String> getDockerImagesUsedByJob(Job<?, ?> job) {
+        // TODO get last build and parse Dockerfile "FROM"
+        return Collections.EMPTY_LIST;
+    }
 
     public String getContextPath() {
         return contextPath;
@@ -67,6 +75,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException("Slave JVM doesn't support SHA-1 MessageDigest");
             }
+            // TODO should consider all files in context, not just Dockerfile
             byte[] content = FileUtils.readFileToByteArray(new File(f, "Dockerfile"));
             byte[] digest = md.digest(content);
             Formatter formatter = new Formatter();

@@ -3,10 +3,13 @@ package com.cloudbees.jenkins.plugins.docker_build_env;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -28,6 +31,11 @@ public class PullDockerImageSelector extends DockerImageSelector {
             docker.pullImage(expandedImage);
         }
         return expandedImage;
+    }
+
+    @Override
+    public Collection<String> getDockerImagesUsedByJob(Job<?, ?> job) {
+        return Collections.singleton(image);
     }
 
     @Extension

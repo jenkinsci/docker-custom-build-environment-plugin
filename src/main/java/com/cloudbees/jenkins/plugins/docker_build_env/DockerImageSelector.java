@@ -3,9 +3,11 @@ package com.cloudbees.jenkins.plugins.docker_build_env;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Let user configure a Docker image to run a container
@@ -15,4 +17,5 @@ public abstract class DockerImageSelector extends AbstractDescribableImpl<Docker
 
     public abstract String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException;
 
+    public abstract Collection<String> getDockerImagesUsedByJob(Job<?, ?> job);
 }

@@ -31,6 +31,12 @@
           <version>2.9</version>
           <optional>true</optional>
       </dependency>
+      <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>dockerhub-notification</artifactId>
+          <version>1.0</version>
+          <optional>true</optional>
+      </dependency>
   </dependencies>
 
 
