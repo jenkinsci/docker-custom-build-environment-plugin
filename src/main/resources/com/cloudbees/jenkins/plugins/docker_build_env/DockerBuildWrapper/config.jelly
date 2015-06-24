@@ -31,16 +31,19 @@ THE SOFTWARE.
         <d:selectDockerTool field="dockerInstallation"/>
 
         <f:advanced>
-            <f:property field="dockerHost"/>
-            <f:entry field="dockerRegistryCredentials" title="Docker registry credentials">
-                <c:select />
-            </f:entry>
-            <f:entry field="exposeDocker" title="expose Docker daemon">
-                <f:checkbox/>
-            </f:entry>
-            <f:entry field="verbose" title="Verbose">
-                <f:checkbox/>
-            </f:entry>
+          <f:property field="dockerHost"/>
+          <f:entry field="dockerRegistryCredentials" title="Docker registry credentials">
+              <c:select />
+          </f:entry>
+          <f:entry field="exposeDocker" title="expose Docker daemon">
+              <f:checkbox/>
+          </f:entry>
+          <f:entry field="privileged" title="Run in privileged mode">
+            <f:checkbox/>
+          </f:entry>
+          <f:entry field="verbose" title="Verbose">
+            <f:checkbox/>
+          </f:entry>
         </f:advanced>
 
     </f:nested>

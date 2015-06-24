@@ -33,14 +33,16 @@ public class Docker implements Closeable {
     private final DockerServerEndpoint dockerHost;
     private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
+    private final boolean privileged;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
         this.listener = listener;
         this.verbose = verbose | debug;
+        this.privileged = privileged;
     }
 
 
@@ -134,9 +136,12 @@ public class Docker implements Closeable {
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = dockerCommand()
-            .add("run", "--tty", "--detach")
-            .add("--user", user)
-            .add( "--workdir", workdir);
+            .add("run", "--tty", "--detach");
+        if (privileged) {
+            args.add( "--privileged");
+        }
+        args.add("--user", user)
+            .add("--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }

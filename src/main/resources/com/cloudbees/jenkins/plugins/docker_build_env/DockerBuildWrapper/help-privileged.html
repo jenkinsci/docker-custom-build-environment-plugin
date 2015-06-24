@@ -1,0 +1,9 @@
+<div>
+    Adds the '--privileged' parameter to Docker's run command. This is useful if you want to run
+    <a href="https://github.com/jpetazzo/dind">Docker in Docker</a> from your build.
+    <p>
+        Please be aware a “privileged” container is given access to all devices, so the isolation you get
+        in this mode is significantly reduced. Read
+        <a href="https://docs.docker.com/reference/run/#runtime-privilege-linux-capabilities-and-lxc-configuration">documentation</a>
+        for more details.
+</div>

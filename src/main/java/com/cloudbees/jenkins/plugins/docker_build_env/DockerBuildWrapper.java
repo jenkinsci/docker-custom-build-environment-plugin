@@ -46,15 +46,18 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean exposeDocker;
 
+    private final boolean privileged;
+
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker, boolean privileged) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
         this.dockerRegistryCredentials = dockerRegistryCredentials;
         this.verbose = verbose;
         this.exposeDocker = exposeDocker;
+        this.privileged = privileged;
     }
 
     public DockerImageSelector getSelector() {
@@ -81,9 +84,13 @@ public class DockerBuildWrapper extends BuildWrapper {
         return exposeDocker;
     }
 
+    public boolean isPrivileged() {
+        return privileged;
+    }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
