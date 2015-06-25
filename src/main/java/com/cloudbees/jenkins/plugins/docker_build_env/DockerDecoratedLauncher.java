@@ -84,7 +84,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
             runInContainer.container =
                     runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, ports, links, environment, userId,
-                            "cat"); // Command expected to hung until killed
+                            "/bin/cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted");
