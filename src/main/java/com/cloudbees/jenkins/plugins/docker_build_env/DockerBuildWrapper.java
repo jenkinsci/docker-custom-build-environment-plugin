@@ -1,14 +1,17 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -64,7 +67,18 @@ public class DockerBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, final Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        build.getAction(BuiltInContainer.class).getDocker().setup(build);
+        BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
+
+        // mount workspace in Docker container
+        // use same path in slave and container so `$WORKSPACE` used in scripts will match
+        String workdir = build.getWorkspace().getRemote();
+        runInContainer.bindMount(workdir);
+
+        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+        String tmp = build.getWorkspace().act(GetTmpdir);
+        runInContainer.bindMount(tmp);
+
+        runInContainer.getDocker().setupCredentials(build);
 
         return new Environment() {
             @Override
@@ -94,5 +108,12 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
 
     }
+
+    private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
+        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+            return System.getProperty("java.io.tmpdir");
+        }
+    };
+
 
 }

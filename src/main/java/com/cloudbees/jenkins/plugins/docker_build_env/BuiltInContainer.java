@@ -13,7 +13,9 @@ import hudson.scm.SCM;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Used to determine if launcher has to be decorated to execute in container, after SCM checkout completed.
@@ -27,6 +29,7 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
     private transient boolean enable;
     private final transient Docker docker;
     private List<Integer> ports = new ArrayList<Integer>();
+    private List<String> volumes = new ArrayList<String>();
 
     public BuiltInContainer(Docker docker) {
         this.docker = docker;
@@ -77,11 +80,36 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
         return ports;
     }
 
+    public List<String> getVolumes() {
+        return volumes;
+    }
+
     @Override
     public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-        if (enable) {
+        if (enable && container != null) {
             env.put("BUILD_CONTAINER_ID", container);
         }
+    }
+
+    public void bindMount(String path) {
+        volumes.add(path);
+    }
+
+    public Map<String, String> getVolumesMap() {
+        Map<String, String> map = new HashMap<String, String>();
+        for (String path : volumes) {
+            map.put(path, path);
+        }
+        return map;
+    }
+
+
+    public Map<Integer, Integer> getPortsMap() {
+        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+        for (Integer port : ports) {
+            map.put(port, port);
+        }
+        return map;
     }
 
     @Extension

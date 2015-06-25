@@ -6,11 +6,9 @@ import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.remoting.VirtualChannel;
-import hudson.util.ArgumentListBuilder;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +28,6 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         this.build = build;
         this.userId = whoAmI(launcher);
     }
-
 
     public Proc launch(String[] cmd, boolean[] mask, String[] env, InputStream in, OutputStream out, FilePath workDir) throws IOException {
         return launch(launch().cmds(cmd).masks(mask).envs(env).stdin(in).stdout(out).pwd(workDir));
@@ -63,27 +60,15 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
     private void startBuildContainer() throws IOException {
         try {
-            String tmp = build.getWorkspace().act(GetTmpdir);
             EnvVars environment = build.getEnvironment(listener);
 
-            Map<String, String> volumes = new HashMap<String, String>();
-            Map<String, String> links = new HashMap<String, String>();
-            Map<Integer, Integer> ports = new HashMap<Integer, Integer>();
-
-            // mount workspace in Docker container
-            // use same path in slave and container so `$WORKSPACE` used in scripts will match
             String workdir = build.getWorkspace().getRemote();
-            volumes.put(workdir, workdir);
 
-            // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-            volumes.put(tmp,tmp);
-
-            for (Integer port : runInContainer.getPorts()) {
-                ports.put(port, port);
-            }
+            Map<String, String> links = new HashMap<String, String>();
 
             runInContainer.container =
-                    runInContainer.getDocker().runDetached(runInContainer.image, workdir, volumes, ports, links, environment, userId,
+                    runInContainer.getDocker().runDetached(runInContainer.image, workdir,
+                            runInContainer.getVolumesMap(), runInContainer.getPortsMap(), links, environment, userId,
                             "/bin/cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {

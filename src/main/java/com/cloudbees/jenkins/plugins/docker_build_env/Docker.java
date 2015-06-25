@@ -41,7 +41,7 @@ public class Docker implements Closeable {
 
     private KeyMaterial dockerEnv;
 
-    public void setup(AbstractBuild build) throws IOException, InterruptedException {
+    public void setupCredentials(AbstractBuild build) throws IOException, InterruptedException {
         this.dockerEnv = dockerHost.newKeyMaterialFactory(build).materialize();
     }
 
