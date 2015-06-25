@@ -1,7 +1,10 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
+import hudson.model.EnvironmentContributingAction;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
@@ -16,7 +19,7 @@ import java.util.List;
  * Used to determine if launcher has to be decorated to execute in container, after SCM checkout completed.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class BuiltInContainer implements BuildBadgeAction {
+public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributingAction {
 
     /* package */ String image;
 
@@ -50,7 +53,7 @@ public class BuiltInContainer implements BuildBadgeAction {
     }
 
     public String getDisplayName() {
-        return "build inside docker container";
+        return "built inside docker container";
     }
 
     public String getUrlName() {
@@ -72,6 +75,13 @@ public class BuiltInContainer implements BuildBadgeAction {
 
     public List<Integer> getPorts() {
         return ports;
+    }
+
+    @Override
+    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+        if (enable) {
+            env.put("BUILD_CONTAINER_ID", container);
+        }
     }
 
     @Extension
