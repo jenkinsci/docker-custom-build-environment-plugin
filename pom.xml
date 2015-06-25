@@ -19,6 +19,15 @@
     </license>
   </licenses>
 
+  <developers>
+      <developer>
+          <id>nicolas</id>
+          <email>nicolas.deloof@gmail.com</email>
+          <organization>CloudBees</organization>
+          <timezone>UTC+1</timezone>
+      </developer>
+  </developers>
+
   <dependencies>
       <dependency>
           <groupId>org.jenkins-ci.plugins</groupId>
