@@ -29,13 +29,16 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean verbose;
 
+    private final boolean exposeDocker;
+
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, boolean verbose) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, boolean verbose, boolean exposeDocker) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
         this.verbose = verbose;
+        this.exposeDocker = exposeDocker;
     }
 
     public DockerImageSelector getSelector() {
@@ -54,11 +57,19 @@ public class DockerBuildWrapper extends BuildWrapper {
         return verbose;
     }
 
+    public boolean isExposeDocker() {
+        return exposeDocker;
+    }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
         final Docker docker = new Docker(dockerHost, dockerInstallation, build, launcher, listener, verbose);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
+
+        if (exposeDocker) {
+            runInContainer.bindMount("/var/run/docker.sock");
+        }
 
         DockerDecoratedLauncher decorated = new DockerDecoratedLauncher(selector, launcher, runInContainer, build);
         return decorated;
