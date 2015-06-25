@@ -29,13 +29,15 @@ public class Docker implements Closeable {
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
     private final boolean verbose;
+    private final boolean privileged;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.launcher = launcher;
         this.listener = listener;
         this.dockerHost = dockerHost;
         this.verbose = verbose | debug;
+        this.privileged = privileged;
     }
 
 
@@ -110,6 +112,9 @@ public class Docker implements Closeable {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(dockerExecutable, "run", "--tty", "--detach");
+        if (privileged) {
+            args.add( "--privileged");
+        }
         args.add("--user", user);
         args.add( "--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {

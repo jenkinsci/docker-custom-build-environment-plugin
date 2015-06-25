@@ -35,6 +35,9 @@ THE SOFTWARE.
             <f:entry field="verbose" title="Verbose">
                 <f:checkbox/>
             </f:entry>
+            <f:entry field="privileged" title="Run in privileged mode">
+                <f:checkbox/>
+            </f:entry>
         </f:advanced>
 
     </f:nested>
