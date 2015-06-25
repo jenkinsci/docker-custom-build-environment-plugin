@@ -53,7 +53,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, build, launcher, listener, verbose);
+        final Docker docker = Docker.Factory.get(dockerHost, dockerInstallation, build, launcher, listener, verbose);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
