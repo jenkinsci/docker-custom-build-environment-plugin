@@ -1,17 +1,16 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.remoting.VirtualChannel;
+import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -67,10 +66,6 @@ public class DockerBuildWrapper extends BuildWrapper {
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
-        if (exposeDocker) {
-            runInContainer.bindMount("/var/run/docker.sock");
-        }
-
         DockerDecoratedLauncher decorated = new DockerDecoratedLauncher(selector, launcher, runInContainer, build);
         return decorated;
     }
@@ -88,6 +83,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
         String tmp = build.getWorkspace().act(GetTmpdir);
         runInContainer.bindMount(tmp);
+
+        if (exposeDocker) {
+            runInContainer.bindMount("/var/run/docker.sock");
+        }
 
         runInContainer.getDocker().setupCredentials(build);
 
@@ -120,11 +119,11 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     }
 
-    private static FilePath.FileCallable<String> GetTmpdir = new FilePath.FileCallable<String>() {
-        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+    private static Callable<String, IOException> GetTmpdir = new MasterToSlaveCallable<String, IOException>() {
+        @Override
+        public String call() {
             return System.getProperty("java.io.tmpdir");
         }
     };
-
 
 }
