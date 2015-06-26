@@ -32,6 +32,9 @@ THE SOFTWARE.
         <f:advanced>
             <f:property field="dockerHost"/>
             <d:selectDockerTool field="dockerInstallation"/>
+            <f:entry field="dockerRegistryCredentials" title="Docker registry credentials">
+                <c:select />
+            </f:entry>
             <f:entry field="exposeDocker" title="expose Docker daemon">
                 <f:checkbox/>
             </f:entry>

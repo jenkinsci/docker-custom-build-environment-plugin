@@ -1,18 +1,29 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ListBoxModel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -26,16 +37,19 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final DockerServerEndpoint dockerHost;
 
+    private final String dockerRegistryCredentials;
+
     private final boolean verbose;
 
     private final boolean exposeDocker;
 
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, boolean verbose, boolean exposeDocker) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
+        this.dockerRegistryCredentials = dockerRegistryCredentials;
         this.verbose = verbose;
         this.exposeDocker = exposeDocker;
     }
@@ -52,6 +66,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         return dockerHost;
     }
 
+    public String getDockerRegistryCredentials() {
+        return dockerRegistryCredentials;
+    }
+
     public boolean isVerbose() {
         return verbose;
     }
@@ -62,7 +80,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, build, launcher, listener, verbose);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
@@ -115,6 +133,20 @@ public class DockerBuildWrapper extends BuildWrapper {
             if (Jenkins.getInstance().getPlugin("maven-plugin") != null)
                 return ! hudson.maven.AbstractMavenProject.class.isInstance(item);
             return true;
+        }
+
+        public ListBoxModel doFillDockerRegistryCredentialsItems(@AncestorInPath Item item, @QueryParameter String uri) {
+            return new StandardListBoxModel()
+                    .withEmptySelection()
+                    .withMatching(AuthenticationTokens.matcher(DockerRegistryToken.class),
+                            CredentialsProvider.lookupCredentials(
+                                    StandardCredentials.class,
+                                    item,
+                                    null,
+                                    Collections.<DomainRequirement>emptyList()
+                            )
+                    );
+
         }
 
     }
