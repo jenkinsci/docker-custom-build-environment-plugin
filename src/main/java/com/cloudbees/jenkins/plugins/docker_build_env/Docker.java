@@ -4,10 +4,13 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 
@@ -28,27 +31,32 @@ public class Docker implements Closeable {
     private final TaskListener listener;
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
+    private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose) throws IOException, InterruptedException {
+        this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
+        this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
         this.listener = listener;
-        this.dockerHost = dockerHost;
         this.verbose = verbose | debug;
     }
 
 
     private KeyMaterial dockerEnv;
+    private KeyMaterial dockerConfig;
 
     public void setupCredentials(AbstractBuild build) throws IOException, InterruptedException {
         this.dockerEnv = dockerHost.newKeyMaterialFactory(build).materialize();
+        this.dockerConfig = registryEndpoint.newKeyMaterialFactory(build).materialize();
     }
 
 
     @Override
     public void close() throws IOException {
         dockerEnv.close();
+        dockerConfig.close();
     }
 
     public boolean hasImage(String image) throws IOException, InterruptedException {

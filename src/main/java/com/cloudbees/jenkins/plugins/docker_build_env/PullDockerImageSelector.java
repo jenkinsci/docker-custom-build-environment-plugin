@@ -28,7 +28,11 @@ public class PullDockerImageSelector extends DockerImageSelector {
         String expandedImage = build.getEnvironment(listener).expand(image);
         if (!docker.hasImage(expandedImage)) {
             listener.getLogger().println("Pull Docker image "+expandedImage+" from repository ...");
-            docker.pullImage(expandedImage);
+            boolean pulled = docker.pullImage(expandedImage);
+            if (!pulled) {
+                listener.getLogger().println("Failed to pull Docker image "+expandedImage);
+                throw new IOException("Failed to pull Docker image "+expandedImage);
+            }
         }
         return expandedImage;
     }
