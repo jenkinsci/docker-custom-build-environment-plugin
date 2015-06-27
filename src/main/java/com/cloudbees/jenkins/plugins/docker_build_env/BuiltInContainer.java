@@ -112,13 +112,4 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
         return map;
     }
 
-    @Extension
-    public static class Listener extends SCMListener {
-        @Override
-        public void onChangeLogParsed(Run<?, ?> build, SCM scm, TaskListener listener, ChangeLogSet<?> changelog) throws Exception {
-            BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
-            if (runInContainer != null) runInContainer.enable();
-        }
-    }
-
 }

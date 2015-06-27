@@ -1,9 +1,12 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import jenkins.model.Jenkins;
@@ -11,8 +14,12 @@ import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -73,6 +80,8 @@ public class DockerBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, final Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
+        // setUp is executed after checkout, so hook here to prepare and run Docker image to host the build
+
         BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
 
         // mount workspace in Docker container
@@ -90,12 +99,57 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         runInContainer.getDocker().setupCredentials(build);
 
+        if (runInContainer.container == null) {
+            if (runInContainer.image == null) {
+                try {
+                    runInContainer.image = selector.prepareDockerImage(runInContainer.getDocker(), build, listener);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted");
+                }
+            }
+
+            runInContainer.container = startBuildContainer(runInContainer, build, listener, whoAmI(launcher));
+            listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
+        }
+
+        // We are all set, DockerDecoratedLauncher now can wrap launcher commands with docker-exec
+        runInContainer.enable();
+
         return new Environment() {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 return build.getAction(BuiltInContainer.class).tearDown();
             }
         };
+    }
+
+
+
+    private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener, String userId) throws IOException {
+        try {
+            EnvVars environment = build.getEnvironment(listener);
+
+            String workdir = build.getWorkspace().getRemote();
+
+            Map<String, String> links = new HashMap<String, String>();
+
+            return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
+                    runInContainer.getVolumesMap(), runInContainer.getPortsMap(), links, environment, userId,
+                    "/bin/cat"); // Command expected to hung until killed
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted");
+        }
+    }
+
+    private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
+
+        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
+        return bos.toString().trim()+":"+bos2.toString().trim();
+
     }
 
     @Extension
