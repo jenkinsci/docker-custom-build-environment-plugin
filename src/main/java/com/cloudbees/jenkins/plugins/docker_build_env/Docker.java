@@ -73,14 +73,15 @@ public class Docker implements Closeable {
     }
 
 
-    public void buildImage(FilePath workspace, String tag) throws IOException, InterruptedException {
+    public void buildImage(FilePath workspace, String dockerfile, String tag) throws IOException, InterruptedException {
         OutputStream out = listener.getLogger();
         OutputStream err = listener.getLogger();
 
         int status = launcher.launch()
-                .pwd(workspace.getRemote())
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "build", "--tag", tag, ".")
+                .cmds(dockerExecutable, "build", "--tag", tag)
+                .cmds("--file", dockerfile)
+                .cmds(workspace.getRemote())
                 .stdout(out).stderr(err).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");

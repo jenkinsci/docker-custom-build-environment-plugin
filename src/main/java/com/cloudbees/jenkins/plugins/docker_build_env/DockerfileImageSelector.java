@@ -25,9 +25,12 @@ public class DockerfileImageSelector extends DockerImageSelector {
 
     private String contextPath;
 
+    private String dockerfile;
+
     @DataBoundConstructor
-    public DockerfileImageSelector(String contextPath) {
+    public DockerfileImageSelector(String contextPath, String dockerfile) {
         this.contextPath = contextPath;
+        this.dockerfile = dockerfile;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         // search for a tagged image with this hash ID
         if (!docker.hasImage(hash)) {
             listener.getLogger().println("Build Docker image from "+expandedContextPath+"/Dockerfile ...");
-            docker.buildImage(filePath, hash);
+            docker.buildImage(filePath, dockerfile, hash);
         }
 
         return hash;
@@ -55,6 +58,15 @@ public class DockerfileImageSelector extends DockerImageSelector {
 
     public String getContextPath() {
         return contextPath;
+    }
+
+    public String getDockerfile() {
+        return dockerfile;
+    }
+
+    private Object readResolve() {
+        if (dockerfile == null) dockerfile="Dockerfile";
+        return this;
     }
 
     @Extension
