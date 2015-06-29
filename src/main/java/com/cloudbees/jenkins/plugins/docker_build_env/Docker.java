@@ -65,7 +65,7 @@ public class Docker implements Closeable {
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "inspect", image)
+                .cmds(dockerExecutable, "-H", dockerHost.getDockerHost(), "inspect", image)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         return status == 0;
     }
@@ -75,7 +75,7 @@ public class Docker implements Closeable {
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "pull", image)
+                .cmds(dockerExecutable, "-H", dockerHost.getDockerHost(), "pull", image)
                 .stdout(out).stderr(err).join();
         return status == 0;
     }
@@ -87,7 +87,7 @@ public class Docker implements Closeable {
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "build", "--tag", tag)
+                .cmds(dockerExecutable, "-H", dockerHost.getDockerHost(), "build", "--tag", tag)
                 .cmds("--file", dockerfile)
                 .cmds(workspace.getRemote())
                 .stdout(out).stderr(err).join();
@@ -102,14 +102,14 @@ public class Docker implements Closeable {
         listener.getLogger().println("Stopping Docker container after build completion");
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "kill", container)
+                .cmds(dockerExecutable, "-H", dockerHost.getDockerHost(), "kill", container)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
 
         status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "rm", container)
+                .cmds(dockerExecutable, "-H", dockerHost.getDockerHost(), "rm", container)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to remove docker container "+container);
@@ -118,7 +118,7 @@ public class Docker implements Closeable {
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(dockerExecutable, "run", "--tty", "--detach");
+        args.add(dockerExecutable, "-H", dockerHost.getDockerHost(), "run", "--tty", "--detach");
         args.add("--user", user);
         args.add( "--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
@@ -155,7 +155,7 @@ public class Docker implements Closeable {
         List<String> originalCmds = starter.cmds();
 
         ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
-        cmdBuilder.add(dockerExecutable,"exec", "--tty", container);
+        cmdBuilder.add(dockerExecutable, "-H", dockerHost.getDockerHost(), "exec", "--tty", container);
 
         boolean[] originalMask = starter.masks();
         for (int i = 0; i < originalCmds.size(); i++) {
