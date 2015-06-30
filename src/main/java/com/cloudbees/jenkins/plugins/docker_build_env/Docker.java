@@ -60,36 +60,45 @@ public class Docker implements Closeable {
     }
 
     public boolean hasImage(String image) throws IOException, InterruptedException {
+        ArgumentListBuilder args = dockerCommand()
+            .add("inspect", image);
+        
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "inspect", image)
+                .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         return status == 0;
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
+        ArgumentListBuilder args = dockerCommand()
+            .add("pull", image);
+        
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "pull", image)
+                .cmds(args)
                 .stdout(out).stderr(err).join();
         return status == 0;
     }
 
 
     public void buildImage(FilePath workspace, String dockerfile, String tag) throws IOException, InterruptedException {
+
+        ArgumentListBuilder args = dockerCommand()
+            .add("build", "--tag", tag)
+            .add("--file", dockerfile)
+            .add(workspace.getRemote());
+
         OutputStream out = listener.getLogger();
         OutputStream err = listener.getLogger();
-
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "build", "--tag", tag)
-                .cmds("--file", dockerfile)
-                .cmds(workspace.getRemote())
+                .cmds(args)
                 .stdout(out).stderr(err).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");
@@ -97,19 +106,26 @@ public class Docker implements Closeable {
     }
 
     public void kill(String container) throws IOException, InterruptedException {
+        ArgumentListBuilder args = dockerCommand()
+            .add("kill", container);
+
+
+        listener.getLogger().println("Stopping Docker container after build completion");
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
-        listener.getLogger().println("Stopping Docker container after build completion");
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "kill", container)
+                .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
 
+        args = new ArgumentListBuilder()
+            .add(dockerExecutable)
+            .add("rm", "--force", container);
         status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(dockerExecutable, "rm", container)
+                .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to remove docker container "+container);
@@ -117,10 +133,10 @@ public class Docker implements Closeable {
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
 
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(dockerExecutable, "run", "--tty", "--detach");
-        args.add("--user", user);
-        args.add( "--workdir", workdir);
+        ArgumentListBuilder args = dockerCommand()
+            .add("run", "--tty", "--detach")
+            .add("--user", user)
+            .add( "--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }
@@ -143,7 +159,8 @@ public class Docker implements Closeable {
 
         int status = launcher.launch()
                 .envs(dockerEnv.env())
-                .cmds(args).stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
+                .cmds(args)
+                .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
 
         if (status != 0) {
             throw new RuntimeException("Failed to run docker image");
@@ -154,16 +171,25 @@ public class Docker implements Closeable {
     public void executeIn(String container, Launcher.ProcStarter starter) {
         List<String> originalCmds = starter.cmds();
 
-        ArgumentListBuilder cmdBuilder = new ArgumentListBuilder();
-        cmdBuilder.add(dockerExecutable,"exec", "--tty", container);
+        ArgumentListBuilder args = dockerCommand()
+            .add("exec", "--tty", container);
 
         boolean[] originalMask = starter.masks();
         for (int i = 0; i < originalCmds.size(); i++) {
             boolean masked = originalMask == null ? false : i < originalMask.length ? originalMask[i] : false;
-            cmdBuilder.add(originalCmds.get(i), masked);
+            args.add(originalCmds.get(i), masked);
         }
 
-        starter.cmds(cmdBuilder);
+        starter.cmds(args);
         starter.envs(dockerEnv.env());
+    }
+
+    private ArgumentListBuilder dockerCommand() {
+        ArgumentListBuilder args = new ArgumentListBuilder()
+                .add(dockerExecutable);
+        if (dockerHost.getUri() != null) {
+            args.add("-H", dockerHost.getUri());
+        }
+        return args;
     }
 }
