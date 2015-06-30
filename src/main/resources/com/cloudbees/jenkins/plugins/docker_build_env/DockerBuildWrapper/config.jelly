@@ -28,10 +28,10 @@ THE SOFTWARE.
         <f:entry title="Docker image to use">
             <f:hetero-radio field="selector" descriptors="${descriptor.selectors()}" />
         </f:entry>
+        <d:selectDockerTool field="dockerInstallation"/>
 
         <f:advanced>
             <f:property field="dockerHost"/>
-            <d:selectDockerTool field="dockerInstallation"/>
             <f:entry field="dockerRegistryCredentials" title="Docker registry credentials">
                 <c:select />
             </f:entry>
