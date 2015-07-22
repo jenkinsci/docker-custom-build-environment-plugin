@@ -33,19 +33,52 @@ public class DockerfileImageSelector extends DockerImageSelector {
         this.dockerfile = dockerfile;
     }
 
+    private FilePath getDockerFilePath(FilePath ctxPath, Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
+
+        FilePath dfPath = null;
+
+        if (dockerfile != null) {
+
+            String expandedDockerFile = build.getEnvironment(listener).expand(dockerfile);
+            dfPath = build.getWorkspace().child(expandedDockerFile);
+
+        } else {
+
+            dfPath = ctxPath.child("DockerFile");
+
+        }
+
+        return dfPath;
+    }
+
+    private String getAbsPath(FilePath fp) throws IOException, InterruptedException {
+
+        File f = new File(fp.toURI());
+
+        return f.getAbsolutePath();
+    }
+
     @Override
     public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
 
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
-        FilePath filePath = build.getWorkspace().child(expandedContextPath);
+        FilePath ctxPath = build.getWorkspace().child(expandedContextPath);
 
-        String hash = filePath.act(new ComputeDockerfileChecksum());
+        FilePath dfPath = getDockerFilePath(ctxPath, docker, build, listener);
+
+        String dfAbsPath = getAbsPath(dfPath);
+
+        String hash = dfPath.getParent().act(new ComputeDockerfileChecksum());
 
         // search for a tagged image with this hash ID
-        if (!docker.hasImage(hash)) {
-            listener.getLogger().println("Build Docker image from "+expandedContextPath+"/Dockerfile ...");
-            docker.buildImage(filePath, dockerfile, hash);
-        }
+        //MR: we don't want to do this check
+        //MR: The docker build will already cheerfully cache each line item int he docker file
+        //MR: but if you use ADD or COPY to bring ina  resource, this check will miss and ignore any
+        //MR: changes to  that file.
+        //if (!docker.hasImage(hash)) {
+            listener.getLogger().println("Build Docker image from "+dfAbsPath+" ...");
+            docker.buildImage(ctxPath, dfAbsPath, hash);
+        //}
 
         return hash;
     }

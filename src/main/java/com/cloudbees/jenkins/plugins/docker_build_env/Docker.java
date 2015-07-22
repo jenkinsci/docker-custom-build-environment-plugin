@@ -173,6 +173,48 @@ public class Docker implements Closeable {
         return out.toString("UTF-8").trim();
     }
 
+    public String runAttached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String user, String... command) throws IOException, InterruptedException {
+
+        ArgumentListBuilder args = dockerCommand()
+                .add("run");
+        if (privileged) {
+            args.add( "--privileged");
+        }
+        args.add("--workdir", workdir);
+        for (Map.Entry<String, String> volume : volumes.entrySet()) {
+            args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
+        }
+        for (Map.Entry<Integer, Integer> port : ports.entrySet()) {
+            args.add("--publish", port.getKey() + ":" + port.getValue());
+        }
+        for (Map.Entry<String, String> link : links.entrySet()) {
+            args.add("--link", link.getKey() + ":" + link.getValue());
+        }
+        for (Map.Entry<String, String> e : environment.entrySet()) {
+            if ("HOSTNAME".equals(e.getKey())) {
+                continue;
+            }
+            args.add("--env");
+            args.addMasked(e.getKey()+"="+e.getValue());
+        }
+
+        if (command != null) {
+            args.add(image).add(command);
+        }
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        int status = launcher.launch()
+                .envs(dockerEnv.env())
+                .cmds(args)
+                .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to run docker image");
+        }
+        return out.toString("UTF-8").trim();
+    }
+
     public void executeIn(String container, Launcher.ProcStarter starter) {
         List<String> originalCmds = starter.cmds();
 
