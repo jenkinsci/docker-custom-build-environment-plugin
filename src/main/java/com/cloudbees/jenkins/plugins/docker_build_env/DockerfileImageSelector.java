@@ -71,10 +71,14 @@ public class DockerfileImageSelector extends DockerImageSelector {
         String hash = dfPath.getParent().act(new ComputeDockerfileChecksum());
 
         // search for a tagged image with this hash ID
-        if (!docker.hasImage(hash)) {
+        //MR: we don't want to do this check
+        //MR: The docker build will already cheerfully cache each line item int he docker file
+        //MR: but if you use ADD or COPY to bring ina  resource, this check will miss and ignore any
+        //MR: changes to  that file.
+        //if (!docker.hasImage(hash)) {
             listener.getLogger().println("Build Docker image from "+dfAbsPath+" ...");
             docker.buildImage(ctxPath, dfAbsPath, hash);
-        }
+        //}
 
         return hash;
     }
