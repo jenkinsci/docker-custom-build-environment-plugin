@@ -34,6 +34,7 @@ public class Docker implements Closeable {
     private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
     private final boolean privileged;
+    private final AbstractBuild build;
 
     public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
@@ -41,6 +42,7 @@ public class Docker implements Closeable {
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
         this.listener = listener;
+        this.build = build;
         this.verbose = verbose | debug;
         this.privileged = privileged;
     }
@@ -69,10 +71,14 @@ public class Docker implements Closeable {
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
 
         int status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         return status == 0;
+    }
+
+    private EnvVars getEnvVars() throws IOException, InterruptedException {
+        return new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
@@ -82,7 +88,7 @@ public class Docker implements Closeable {
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).stderr(err).join();
         return status == 0;
@@ -99,7 +105,7 @@ public class Docker implements Closeable {
         OutputStream out = listener.getLogger();
         OutputStream err = listener.getLogger();
         int status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).stderr(err).join();
         if (status != 0) {
@@ -116,7 +122,7 @@ public class Docker implements Closeable {
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
@@ -126,7 +132,7 @@ public class Docker implements Closeable {
             .add(dockerExecutable)
             .add("rm", "--force", container);
         status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
@@ -163,7 +169,7 @@ public class Docker implements Closeable {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         int status = launcher.launch()
-                .envs(dockerEnv.env())
+                .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
 
@@ -173,7 +179,7 @@ public class Docker implements Closeable {
         return out.toString("UTF-8").trim();
     }
 
-    public void executeIn(String container, Launcher.ProcStarter starter) {
+    public void executeIn(String container, Launcher.ProcStarter starter) throws IOException, InterruptedException {
         List<String> originalCmds = starter.cmds();
 
         ArgumentListBuilder args = dockerCommand()
@@ -186,7 +192,7 @@ public class Docker implements Closeable {
         }
 
         starter.cmds(args);
-        starter.envs(dockerEnv.env());
+        starter.envs(getEnvVars());
     }
 
     private ArgumentListBuilder dockerCommand() {
