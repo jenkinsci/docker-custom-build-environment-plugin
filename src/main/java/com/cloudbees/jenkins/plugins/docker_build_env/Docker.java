@@ -35,6 +35,7 @@ public class Docker implements Closeable {
     private final boolean verbose;
     private final boolean privileged;
     private final AbstractBuild build;
+    private EnvVars envVars;
 
     public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
@@ -78,7 +79,10 @@ public class Docker implements Closeable {
     }
 
     private EnvVars getEnvVars() throws IOException, InterruptedException {
-        return new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
+        if (envVars == null) {
+            envVars = new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
+        }
+        return envVars;
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
