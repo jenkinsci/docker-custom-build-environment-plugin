@@ -37,7 +37,11 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         // Do not decorate launcher until SCM checkout completed
         if (!runInContainer.isEnabled()) return super.launch(starter);
 
-        runInContainer.getDocker().executeIn(runInContainer.container, starter);
+        try {
+            runInContainer.getDocker().executeIn(runInContainer.container, starter);
+        } catch (InterruptedException e) {
+            throw new IOException("Caught InterruptedException", e);
+        }
 
         return super.launch(starter);
     }
