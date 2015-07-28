@@ -66,9 +66,9 @@
   </pluginRepositories>
 
   <scm>
-    <url>https://github.com/jenkinsci/oki-docki-plugin</url>
-    <connection>scm:git:https://github.com/jenkinsci/oki-docki-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/oki-docki-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/docker-custom-build-environment-plugin</url>
+    <connection>scm:git:https://github.com/jenkinsci/docker-custom-build-environment-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/docker-custom-build-environment-plugin.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
