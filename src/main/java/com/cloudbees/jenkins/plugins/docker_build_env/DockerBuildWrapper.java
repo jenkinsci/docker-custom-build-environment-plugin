@@ -48,9 +48,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean privileged;
 
+    private final boolean inheritedEnvironment;
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker, boolean privileged) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker, boolean privileged, boolean inheritedEnvironment) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -58,6 +59,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.verbose = verbose;
         this.exposeDocker = exposeDocker;
         this.privileged = privileged;
+        this.inheritedEnvironment = inheritedEnvironment;
     }
 
     public DockerImageSelector getSelector() {
@@ -86,6 +88,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public boolean isPrivileged() {
         return privileged;
+    }
+
+    public boolean isInheritedEnvironment() {
+        return inheritedEnvironment;
     }
 
     @Override
@@ -148,7 +154,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener, String userId) throws IOException {
         try {
-            EnvVars environment = build.getEnvironment(listener);
+            final EnvVars environment;
+            if(inheritedEnvironment) {
+                environment = build.getEnvironment(listener);
+            } else {
+                environment = build.getCharacteristicEnvVars();
+                environment.put("WORKSPACE",build.getWorkspace().getRemote());
+            }
 
             String workdir = build.getWorkspace().getRemote();
 
