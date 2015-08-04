@@ -162,7 +162,7 @@ public class Docker implements Closeable {
             args.add("--link", link.getKey() + ":" + link.getValue());
         }
         for (Map.Entry<String, String> e : environment.entrySet()) {
-            if ("HOSTNAME".equals(e.getKey())) {
+            if ("HOSTNAME".equals(e.getKey()) || e.getKey().startsWith("BASH_FUNC")) {
                 continue;
             }
             args.add("--env");

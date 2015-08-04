@@ -41,6 +41,9 @@ THE SOFTWARE.
           <f:entry field="privileged" title="Run in privileged mode">
             <f:checkbox/>
           </f:entry>
+          <f:entry field="inheritedEnvironment" title="Inherit Jenkins environment">
+            <f:checkbox/>
+          </f:entry>
           <f:entry field="verbose" title="Verbose">
             <f:checkbox/>
           </f:entry>
