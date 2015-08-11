@@ -130,6 +130,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         String tmp = build.getWorkspace().act(GetTmpdir);
         runInContainer.bindMount(tmp);
 
+        // mount ToolIntallers installation directory so installed tools are available inside container
+        final String tools = Computer.currentComputer().getNode().getRootPath().child("tools").getRemote();
+        runInContainer.bindMount(tools);
+
         for (Volume volume : volumes) {
             runInContainer.bindMount(volume.getHostPath(), volume.getPath());
         }
