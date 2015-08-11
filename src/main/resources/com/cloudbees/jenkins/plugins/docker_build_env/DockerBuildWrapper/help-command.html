@@ -1,0 +1,6 @@
+This advanced option let you configure the command to be ran when the container is started. This command
+<b>must</b> hang so the container is alive, while build steps are executed using <code>docker exec</code>.
+<p>
+You should not change this option until you have some advanced requirements. For sample using
+<a href="https://github.com/jpetazzo/dind">Docker in Docker</a> will require to configure command as
+<code>wrapdocker /bin/cat</code>.

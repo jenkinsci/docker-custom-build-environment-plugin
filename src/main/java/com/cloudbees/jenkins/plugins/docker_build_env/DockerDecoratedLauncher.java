@@ -19,12 +19,15 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
     private final DockerImageSelector selector;
     private final BuiltInContainer runInContainer;
     private final AbstractBuild build;
+    private final String userId;
 
-    public DockerDecoratedLauncher(DockerImageSelector selector, Launcher launcher, BuiltInContainer runInContainer, AbstractBuild build) throws IOException, InterruptedException {
+    public DockerDecoratedLauncher(DockerImageSelector selector, Launcher launcher, BuiltInContainer runInContainer,
+                                   AbstractBuild build, String userId) throws IOException, InterruptedException {
         super(launcher);
         this.selector = selector;
         this.runInContainer = runInContainer;
         this.build = build;
+        this.userId = userId;
     }
 
     public Proc launch(String[] cmd, boolean[] mask, String[] env, InputStream in, OutputStream out, FilePath workDir) throws IOException {
@@ -38,7 +41,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         if (!runInContainer.isEnabled()) return super.launch(starter);
 
         try {
-            runInContainer.getDocker().executeIn(runInContainer.container, starter);
+            runInContainer.getDocker().executeIn(runInContainer.container, userId, starter);
         } catch (InterruptedException e) {
             throw new IOException("Caught InterruptedException", e);
         }

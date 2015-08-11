@@ -31,7 +31,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
             new DockerBuildWrapper(
                 new PullDockerImageSelector("ubuntu:14.04"),
-                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList())
+                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat")
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 

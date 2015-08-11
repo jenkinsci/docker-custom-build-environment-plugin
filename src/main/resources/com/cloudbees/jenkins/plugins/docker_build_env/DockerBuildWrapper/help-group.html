@@ -1,0 +1,7 @@
+The user to run build <em>has</em> to be the same as the Jenkins slave user so files created in workspace
+have adequate owner and permission set. Side effect is you can't configure the user to run inside docker
+(until Docker do support <a href="https://github.com/docker/docker/issues/7906">user namespace</a>)
+<p>
+For many usages this restriction can be frustrating, so as a workaround you can configure user's group ID
+to gain extra privileges in your container. For sample, if you want to run
+<a href="https://github.com/jpetazzo/dind">Docker in Docker</a>, you can set group as '<code>docker</code>'.

@@ -28,6 +28,7 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
     /* package */ String image;
 
     /* package */ transient String container;
+
     private transient boolean enable;
     private final transient Docker docker;
     private List<Integer> ports = new ArrayList<Integer>();

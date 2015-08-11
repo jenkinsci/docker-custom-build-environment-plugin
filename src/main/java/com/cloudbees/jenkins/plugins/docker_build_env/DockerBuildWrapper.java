@@ -50,10 +50,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean privileged;
 
+    private String group;
+
+    private String command;
 
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
-                              List<Volume> volumes) {
+                              List<Volume> volumes, String group, String command) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -61,6 +64,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.verbose = verbose;
         this.privileged = privileged;
         this.volumes = volumes;
+        this.group = group;
+        this.command = command;
     }
 
     public DockerImageSelector getSelector() {
@@ -91,13 +96,21 @@ public class DockerBuildWrapper extends BuildWrapper {
         return volumes;
     }
 
+    public String getGroup() {
+        return group;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
         final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
 
-        DockerDecoratedLauncher decorated = new DockerDecoratedLauncher(selector, launcher, runInContainer, build);
+        DockerDecoratedLauncher decorated = new DockerDecoratedLauncher(selector, launcher, runInContainer, build, whoAmI(launcher));
         return decorated;
     }
 
@@ -132,7 +145,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                 }
             }
 
-            runInContainer.container = startBuildContainer(runInContainer, build, listener, whoAmI(launcher));
+            runInContainer.container = startBuildContainer(runInContainer, build, listener);
             listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
         }
 
@@ -149,7 +162,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
 
 
-    private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener, String userId) throws IOException {
+    private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
         try {
             EnvVars environment = build.getEnvironment(listener);
 
@@ -158,8 +171,8 @@ public class DockerBuildWrapper extends BuildWrapper {
             Map<String, String> links = new HashMap<String, String>();
 
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
-                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links, environment, userId,
-                    "/bin/cat"); // Command expected to hung until killed
+                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links, environment,
+                    command.split(" ")); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted");
@@ -169,10 +182,15 @@ public class DockerBuildWrapper extends BuildWrapper {
     private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
+        String uid = bos.toString().trim();
 
-        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
-        launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
-        return bos.toString().trim()+":"+bos2.toString().trim();
+        String gid = group;
+        if (group == null) {
+            ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
+            launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
+            gid = bos2.toString().trim();
+        }
+        return uid+":"+gid;
 
     }
 
@@ -228,6 +246,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         if (exposeDocker) {
             this.volumes.add(new Volume("/var/run/docker.sock","/var/run/docker.sock"));
         }
+        if (command == null) command = "/bin/cat";
         return this;
     }
 }
