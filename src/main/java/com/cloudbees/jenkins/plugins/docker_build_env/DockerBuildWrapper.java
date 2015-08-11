@@ -63,7 +63,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.dockerRegistryCredentials = dockerRegistryCredentials;
         this.verbose = verbose;
         this.privileged = privileged;
-        this.volumes = volumes;
+        this.volumes = volumes != null ? volumes : Collections.<Volume>emptyList();
         this.group = group;
         this.command = command;
     }
