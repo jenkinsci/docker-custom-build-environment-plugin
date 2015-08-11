@@ -14,8 +14,11 @@ import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;

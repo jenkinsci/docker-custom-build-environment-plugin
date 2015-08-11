@@ -23,9 +23,11 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,20 +46,21 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean verbose;
 
-    private final boolean exposeDocker;
+    private List<Volume> volumes;
 
     private final boolean privileged;
 
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean exposeDocker, boolean privileged) {
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
+                              List<Volume> volumes) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
         this.dockerRegistryCredentials = dockerRegistryCredentials;
         this.verbose = verbose;
-        this.exposeDocker = exposeDocker;
         this.privileged = privileged;
+        this.volumes = volumes;
     }
 
     public DockerImageSelector getSelector() {
@@ -80,12 +83,12 @@ public class DockerBuildWrapper extends BuildWrapper {
         return verbose;
     }
 
-    public boolean isExposeDocker() {
-        return exposeDocker;
-    }
-
     public boolean isPrivileged() {
         return privileged;
+    }
+
+    public List<Volume> getVolumes() {
+        return volumes;
     }
 
     @Override
@@ -114,8 +117,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         String tmp = build.getWorkspace().act(GetTmpdir);
         runInContainer.bindMount(tmp);
 
-        if (exposeDocker) {
-            runInContainer.bindMount("/var/run/docker.sock");
+        for (Volume volume : volumes) {
+            runInContainer.bindMount(volume.getHostPath(), volume.getPath());
         }
 
         runInContainer.getDocker().setupCredentials(build);
@@ -155,7 +158,7 @@ public class DockerBuildWrapper extends BuildWrapper {
             Map<String, String> links = new HashMap<String, String>();
 
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
-                    runInContainer.getVolumesMap(), runInContainer.getPortsMap(), links, environment, userId,
+                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links, environment, userId,
                     "/bin/cat"); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
@@ -215,4 +218,16 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
     };
 
+
+    // --- backward compatibility
+
+    private transient boolean exposeDocker;
+
+    private Object readResolve() {
+        if (volumes == null) volumes = new ArrayList<Volume>();
+        if (exposeDocker) {
+            this.volumes.add(new Volume("/var/run/docker.sock","/var/run/docker.sock"));
+        }
+        return this;
+    }
 }

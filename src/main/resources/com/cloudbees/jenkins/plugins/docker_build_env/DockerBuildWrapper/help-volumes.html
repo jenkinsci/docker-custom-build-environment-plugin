@@ -1,0 +1,8 @@
+Define volumes to bind mound from slave host into container.
+<p>
+Typical usage is to bind mount maven local repository to avoid downloading dependencies again and again.
+If your container image does not define a custom user to match the jenkins user used on build executor
+(which is expected) then consider user <code>$HOME</code> to be <code>/</code>
+<p>
+    Example : HostPath=<code>$WORKSPACE/maven-repository</code>, Path=<code>/.m2/repository</code>
+

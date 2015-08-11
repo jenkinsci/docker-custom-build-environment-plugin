@@ -10,6 +10,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.Collections;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -29,7 +31,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
             new DockerBuildWrapper(
                 new PullDockerImageSelector("ubuntu:14.04"),
-                "", new DockerServerEndpoint("", ""), "", true, false, false)
+                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList())
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 
