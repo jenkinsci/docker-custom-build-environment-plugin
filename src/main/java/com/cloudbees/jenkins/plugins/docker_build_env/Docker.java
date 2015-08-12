@@ -53,18 +53,17 @@ public class Docker implements Closeable {
 
 
     private KeyMaterial dockerEnv;
-    private KeyMaterial dockerConfig;
 
     public void setupCredentials(AbstractBuild build) throws IOException, InterruptedException {
-        this.dockerEnv = dockerHost.newKeyMaterialFactory(build).materialize();
-        this.dockerConfig = registryEndpoint.newKeyMaterialFactory(build).materialize();
+        this.dockerEnv = dockerHost.newKeyMaterialFactory(build)
+                .plus(   registryEndpoint.newKeyMaterialFactory(build))
+                .materialize();
     }
 
 
     @Override
     public void close() throws IOException {
         dockerEnv.close();
-        dockerConfig.close();
     }
 
     public boolean hasImage(String image) throws IOException, InterruptedException {
