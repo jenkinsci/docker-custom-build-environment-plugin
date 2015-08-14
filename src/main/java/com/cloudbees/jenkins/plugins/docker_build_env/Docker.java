@@ -4,21 +4,16 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -147,6 +142,9 @@ public class Docker implements Closeable {
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String... command) throws IOException, InterruptedException {
 
+        String docker0 = getDocker0Ip(launcher, image);
+
+
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
         if (privileged) {
@@ -162,6 +160,9 @@ public class Docker implements Closeable {
         for (Map.Entry<String, String> link : links.entrySet()) {
             args.add("--link", link.getKey() + ":" + link.getValue());
         }
+
+        args.add("--add-host", "dockerhost:"+docker0);
+
 /*
         for (Map.Entry<String, String> e : environment.entrySet()) {
             if ("HOSTNAME".equals(e.getKey())) {
@@ -183,8 +184,52 @@ public class Docker implements Closeable {
         if (status != 0) {
             throw new RuntimeException("Failed to run docker image");
         }
-        return out.toString("UTF-8").trim();
+        String container = out.toString("UTF-8").trim();
+        return container;
     }
+
+    private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int status = launcher.launch()
+                .cmds("ifconfig", "docker0")
+                .stdout(out)
+                .join();
+
+        if (status == 0) {
+            final String s = out.toString();
+            int i = s.indexOf("inet addr:")+10;
+            int j = s.indexOf(' ', i);
+            return s.substring(i, j);
+        }
+
+        // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
+        // with boot2docker ...
+        // alternatively, let's run the specified image once to discover gateway IP from the container
+
+        ArgumentListBuilder args = dockerCommand()
+                .add("run", "--tty", "--rm")
+                .add(image)
+                .add("/sbin/ip", "route");
+
+        out = new ByteArrayOutputStream();
+
+        status = launcher.launch()
+                .envs(getEnvVars())
+                .cmds(args)
+                .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to retrieve Docker daemon bridge IP");
+        }
+
+        String route = out.toString("UTF-8").trim();
+
+        // equivalent to `awk '/default/ { print $3 }'` but we can't assume awk is available
+        String dockerhost = route.substring(route.indexOf("default")) .split(" ")[2];
+        return dockerhost;
+    }
+
 
     public void executeIn(String container, String userId, Launcher.ProcStarter starter) throws IOException, InterruptedException {
         List<String> originalCmds = starter.cmds();
