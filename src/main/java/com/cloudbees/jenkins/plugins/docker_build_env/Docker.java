@@ -163,7 +163,6 @@ public class Docker implements Closeable {
 
         args.add("--add-host", "dockerhost:"+docker0);
 
-/*
         for (Map.Entry<String, String> e : environment.entrySet()) {
             if ("HOSTNAME".equals(e.getKey())) {
                 continue;
@@ -171,7 +170,6 @@ public class Docker implements Closeable {
             args.add("--env");
             args.addMasked(e.getKey()+"="+e.getValue());
         }
-*/
         args.add(image).add(command);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
