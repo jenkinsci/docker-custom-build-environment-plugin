@@ -6,8 +6,10 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.model.listeners.RunListener;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -121,18 +123,15 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
 
-        // mount workspace in Docker container
-        // use same path in slave and container so `$WORKSPACE` used in scripts will match
-        String workdir = build.getWorkspace().getRemote();
-        runInContainer.bindMount(workdir);
+        // mount slave root in Docker container so build process can access project workspace, tools, as well as jars copied by maven plugin.
+        final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
+        runInContainer.bindMount(root);
 
         // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
         String tmp = build.getWorkspace().act(GetTmpdir);
         runInContainer.bindMount(tmp);
 
         // mount ToolIntallers installation directory so installed tools are available inside container
-        final String tools = Computer.currentComputer().getNode().getRootPath().child("tools").getRemote();
-        runInContainer.bindMount(tools);
 
         for (Volume volume : volumes) {
             runInContainer.bindMount(volume.getHostPath(), volume.getPath());
@@ -168,19 +167,49 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
         try {
-            EnvVars environment = build.getEnvironment(listener);
+            EnvVars environment = buildContainerEnvironment(build, listener);
 
             String workdir = build.getWorkspace().getRemote();
 
             Map<String, String> links = new HashMap<String, String>();
 
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
-                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links, environment,
+                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
+                    environment, build.getSensitiveBuildVariables(),
                     command.split(" ")); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted");
         }
+    }
+
+    /**
+     * Create the container environment.
+     * We can't just pass result of {@link AbstractBuild#getEnvironment(TaskListener)}, as this one do include slave host
+     * environment, that may not make any sense inside container (consider <code>PATH</code> for sample).
+     */
+    private EnvVars buildContainerEnvironment(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+        EnvVars env = new EnvVars ();
+        FilePath ws = build.getWorkspace();
+        if (ws!=null) // ?
+            env.put("WORKSPACE", ws.getRemote());
+
+        env.putAll(build.getCharacteristicEnvVars());
+
+        for (hudson.model.Environment environment : build.getEnvironments()) {
+            environment.buildEnvVars(env);
+        }
+
+        final Job job = build.getParent();
+        if (job instanceof AbstractProject)
+                ((AbstractProject) job).getScm().buildEnvVars(build, env);
+
+        for (EnvironmentContributingAction a : build.getActions(EnvironmentContributingAction.class))
+            a.buildEnvVars(build, env);
+
+        EnvVars.resolve(env);
+
+        return env;
     }
 
     private String whoAmI(Launcher launcher) throws IOException, InterruptedException {

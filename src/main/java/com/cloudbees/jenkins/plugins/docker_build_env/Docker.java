@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -140,7 +141,7 @@ public class Docker implements Closeable {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, String... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String... command) throws IOException, InterruptedException {
 
         String docker0 = getDocker0Ip(launcher, image);
 
@@ -160,18 +161,18 @@ public class Docker implements Closeable {
         for (Map.Entry<String, String> link : links.entrySet()) {
             args.add("--link", link.getKey() + ":" + link.getValue());
         }
-
         args.add("--add-host", "dockerhost:"+docker0);
 
-/*
         for (Map.Entry<String, String> e : environment.entrySet()) {
             if ("HOSTNAME".equals(e.getKey())) {
                 continue;
             }
             args.add("--env");
-            args.addMasked(e.getKey()+"="+e.getValue());
+            if (sensitiveBuildVariables.contains(e.getKey()))
+                args.addMasked(e.getKey()+"="+e.getValue());
+            else
+                args.add(e.getKey()+"="+e.getValue());
         }
-*/
         args.add(image).add(command);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
