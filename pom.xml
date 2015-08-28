@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.580</version>
+    <version>1.609</version>
   </parent>
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
@@ -37,7 +37,7 @@
       <dependency>
           <groupId>org.jenkins-ci.main</groupId>
           <artifactId>maven-plugin</artifactId>
-          <version>2.9</version>
+          <version>2.12</version>
           <optional>true</optional>
       </dependency>
       <dependency>
