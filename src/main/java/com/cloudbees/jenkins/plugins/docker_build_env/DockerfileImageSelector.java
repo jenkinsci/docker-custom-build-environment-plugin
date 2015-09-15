@@ -7,6 +7,7 @@ import hudson.model.Descriptor;
 import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import jenkins.MasterToSlaveFileCallable;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -39,7 +40,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
 
-        String hash = filePath.act(new ComputeDockerfileChecksum());
+        String hash = filePath.act(new ComputeDockerfileChecksum(listener));
 
         // search for a tagged image with this hash ID
         if (!docker.hasImage(hash)) {
@@ -75,26 +76,6 @@ public class DockerfileImageSelector extends DockerImageSelector {
         @Override
         public String getDisplayName() {
             return "Build from Dockerfile";
-        }
-    }
-
-    public static class ComputeDockerfileChecksum implements hudson.FilePath.FileCallable<String> {
-
-        public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-            MessageDigest md = null;
-            try {
-                md = MessageDigest.getInstance("SHA-1");
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException("Slave JVM doesn't support SHA-1 MessageDigest");
-            }
-            // TODO should consider all files in context, not just Dockerfile
-            byte[] content = FileUtils.readFileToByteArray(new File(f, "Dockerfile"));
-            byte[] digest = md.digest(content);
-            Formatter formatter = new Formatter();
-            for (byte b : digest) {
-                formatter.format("%02x", b);
-            }
-            return formatter.toString();
         }
     }
 }

@@ -1,7 +1,8 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
-import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import jenkins.MasterToSlaveFileCallable;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -13,11 +14,11 @@ import java.util.Formatter;
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class ComputeDockerfileChecksum implements hudson.FilePath.FileCallable<String> {
+public class ComputeDockerfileChecksum extends MasterToSlaveFileCallable<String> {
 
-    private final BuildListener listener;
+    private final TaskListener listener;
 
-    public ComputeDockerfileChecksum(BuildListener listener) {
+    public ComputeDockerfileChecksum(TaskListener listener) {
         this.listener = listener;
     }
 
