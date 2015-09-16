@@ -189,7 +189,7 @@ public class DockerBuildWrapper extends BuildWrapper {
      * environment, that may not make any sense inside container (consider <code>PATH</code> for sample).
      */
     private EnvVars buildContainerEnvironment(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-        EnvVars env = new EnvVars ();
+        EnvVars env = new EnvVars();
         FilePath ws = build.getWorkspace();
         if (ws!=null) // ?
             env.put("WORKSPACE", ws.getRemote());
@@ -201,11 +201,15 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
 
         final Job job = build.getParent();
-        if (job instanceof AbstractProject)
-                ((AbstractProject) job).getScm().buildEnvVars(build, env);
+        if (job instanceof AbstractProject) {
+            ((AbstractProject) job).getScm().buildEnvVars(build, env);
+        }
 
         for (EnvironmentContributingAction a : build.getActions(EnvironmentContributingAction.class))
             a.buildEnvVars(build, env);
+
+        for (EnvironmentContributor ec : EnvironmentContributor.all().reverseView())
+            ec.buildEnvironmentFor(build, env, listener);
 
         EnvVars.resolve(env);
 
