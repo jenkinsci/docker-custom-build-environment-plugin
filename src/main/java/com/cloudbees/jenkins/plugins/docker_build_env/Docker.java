@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
+import com.google.common.net.InetAddresses;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -201,6 +202,14 @@ public class Docker implements Closeable {
             final String s = out.toString();
             int i = s.indexOf("inet addr:")+10;
             int j = s.indexOf(' ', i);
+            String ip = s.substring(i, j);
+            if (InetAddresses.isInetAddress(ip)) {
+                return ip;
+            }
+
+            // ifconfig from newer versions of the net-tools package produce a different output, see JENKINS-30512
+            i = s.indexOf("inet ")+5;
+            j = s.indexOf(' ', i);
             return s.substring(i, j);
         }
 
