@@ -16,6 +16,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -191,17 +195,25 @@ public class Docker implements Closeable {
 
     private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int status = launcher.launch()
-                .cmds("ifconfig", "docker0")
-                .stdout(out)
-                .join();
+        Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
 
-        if (status == 0) {
-            final String s = out.toString();
-            int i = s.indexOf("inet addr:")+10;
-            int j = s.indexOf(' ', i);
-            return s.substring(i, j);
+        while (networkInterfaces.hasMoreElements()) {
+            NetworkInterface netIf = networkInterfaces.nextElement();
+
+            // TODO: There should be a way to set the interface as this may not always be 'docker0'.
+            if (!netIf.getName().equals("docker0")) {
+                continue;
+            }
+
+            Enumeration<InetAddress> inetAddresses = netIf.getInetAddresses();
+
+            while (inetAddresses.hasMoreElements()) {
+                InetAddress addr = inetAddresses.nextElement();
+
+                if (addr instanceof Inet4Address) {
+                    return addr.getHostAddress();
+                }
+            }
         }
 
         // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
@@ -213,9 +225,9 @@ public class Docker implements Closeable {
                 .add(image)
                 .add("/sbin/ip", "route");
 
-        out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        status = launcher.launch()
+        int status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
