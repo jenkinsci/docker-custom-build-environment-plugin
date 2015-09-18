@@ -18,6 +18,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,17 +198,14 @@ public class Docker implements Closeable {
 
     private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int status = launcher.launch()
-                .cmds("ifconfig", "docker0")
-                .stdout(out)
-                .join();
-
-        if (status == 0) {
-            final String s = out.toString();
-            int i = s.indexOf("inet addr:")+10;
-            int j = s.indexOf(' ', i);
-            return s.substring(i, j);
+        NetworkInterface docker0 = NetworkInterface.getByName("docker0");
+        if (docker0 != null) {
+            for (InterfaceAddress address : docker0.getInterfaceAddresses()) {
+                InetAddress inetAddress = address.getAddress();
+                if (inetAddress != null && inetAddress instanceof Inet4Address) {
+                    return inetAddress.getHostAddress();
+                }
+            }
         }
 
         // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
@@ -216,9 +217,9 @@ public class Docker implements Closeable {
                 .add(image)
                 .add("/sbin/ip", "route");
 
-        out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        status = launcher.launch()
+        int status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
