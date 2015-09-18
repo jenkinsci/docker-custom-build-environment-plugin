@@ -6,18 +6,11 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Job;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
-import jenkins.MasterToSlaveFileCallable;
-import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.File;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Formatter;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>

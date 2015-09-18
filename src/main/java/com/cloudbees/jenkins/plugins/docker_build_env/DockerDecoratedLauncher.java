@@ -1,15 +1,13 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
-import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
-import hudson.remoting.VirtualChannel;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
 * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>

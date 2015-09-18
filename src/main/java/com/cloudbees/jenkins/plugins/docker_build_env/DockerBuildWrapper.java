@@ -6,10 +6,15 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
-import hudson.model.listeners.RunListener;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Computer;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -31,6 +36,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -189,30 +196,12 @@ public class DockerBuildWrapper extends BuildWrapper {
      * environment, that may not make any sense inside container (consider <code>PATH</code> for sample).
      */
     private EnvVars buildContainerEnvironment(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-        EnvVars env = new EnvVars();
-        FilePath ws = build.getWorkspace();
-        if (ws!=null) // ?
-            env.put("WORKSPACE", ws.getRemote());
-
-        env.putAll(build.getCharacteristicEnvVars());
-
-        for (hudson.model.Environment environment : build.getEnvironments()) {
-            environment.buildEnvVars(env);
+        EnvVars env = build.getEnvironment(listener);
+        for (String key : Computer.currentComputer().buildEnvironment(listener).keySet()) {
+            env.remove(key);
         }
-
-        final Job job = build.getParent();
-        if (job instanceof AbstractProject) {
-            ((AbstractProject) job).getScm().buildEnvVars(build, env);
-        }
-
-        for (EnvironmentContributingAction a : build.getActions(EnvironmentContributingAction.class))
-            a.buildEnvVars(build, env);
-
-        for (EnvironmentContributor ec : EnvironmentContributor.all().reverseView())
-            ec.buildEnvironmentFor(build, env, listener);
-
+        LOGGER.log(Level.FINE, "reduced environment: {0}", env);
         EnvVars.resolve(env);
-
         return env;
     }
 
@@ -271,6 +260,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
     };
 
+
+    private static final Logger LOGGER = Logger.getLogger(DockerBuildWrapper.class.getName());
 
     // --- backward compatibility
 

@@ -1,16 +1,10 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
 import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.EnvironmentContributingAction;
-import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.model.listeners.SCMListener;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.SCM;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

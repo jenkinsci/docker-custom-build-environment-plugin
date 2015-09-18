@@ -16,9 +16,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -233,28 +236,45 @@ public class Docker implements Closeable {
 
 
     public void executeIn(String container, String userId, Launcher.ProcStarter starter) throws IOException, InterruptedException {
-        List<String> originalCmds = starter.cmds();
+        List<String> prefix = dockerCommandArgs();
+        prefix.add("exec");
+        prefix.add("--tty");
+        prefix.add("--user");
+        prefix.add(userId);
+        prefix.add(container);
+        prefix.add("env");
 
-        ArgumentListBuilder args = dockerCommand()
-            .add("exec", "--tty")
-            .add("--user", userId)
-            .add(container);
+        // Build a list of environment, hidding node's one
+        Set<String>  envs = new TreeSet<String>(Arrays.asList(starter.envs()));
+        for (String key : Computer.currentComputer().buildEnvironment(listener).keySet()) {
+            envs.remove(key);
+        }
+        prefix.addAll(envs);
 
-        boolean[] originalMask = starter.masks();
-        for (int i = 0; i < originalCmds.size(); i++) {
-            boolean masked = originalMask == null ? false : i < originalMask.length ? originalMask[i] : false;
-            args.add(originalCmds.get(i), masked);
+        starter.cmds().addAll(0, prefix);
+        if (starter.masks() != null) {
+            boolean[] masks = new boolean[starter.masks().length + prefix.size()];
+            System.arraycopy(starter.masks(), 0, masks, prefix.size(), starter.masks().length);
+            starter.masks(masks);
         }
 
-        starter.cmds(args);
         starter.envs(getEnvVars());
     }
 
     private ArgumentListBuilder dockerCommand() {
-        ArgumentListBuilder args = new ArgumentListBuilder()
-                .add(dockerExecutable);
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        for (String s : dockerCommandArgs()) {
+            args.add(s);
+        }
+        return args;
+    }
+
+    private List<String> dockerCommandArgs() {
+        List<String> args = new ArrayList<String>();
+        args.add(dockerExecutable);
         if (dockerHost.getUri() != null) {
-            args.add("-H", dockerHost.getUri());
+            args.add("-H");
+            args.add(dockerHost.getUri());
         }
         return args;
     }
