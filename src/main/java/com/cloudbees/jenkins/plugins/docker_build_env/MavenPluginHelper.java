@@ -4,6 +4,9 @@ import hudson.Extension;
 import hudson.maven.TcpSocketHostLocator;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -13,6 +16,12 @@ public class MavenPluginHelper extends TcpSocketHostLocator {
 
     @Override
     public String getTcpSocketHost() throws IOException {
-        return "dockerhost";
+        try {
+            InetAddress.getByName("dockerhost");
+            return "dockerhost";
+        } catch (UnknownHostException e) {
+            // we are not running inside a Docker container;
+            return null;
+        }
     }
 }
