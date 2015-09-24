@@ -198,6 +198,26 @@ public class Docker implements Closeable {
 
     private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
 
+        // On some distributions, docker doesn't start docker0 bridge until a container do require it
+        // So let's run the container once, running /bin/true so it terminates immediately
+
+        ArgumentListBuilder args = dockerCommand()
+                .add("run", "--rm")
+                .add("--entrypoint")
+                .add("/bin/true")
+                .add(image);
+
+        int status = launcher.launch()
+                .envs(getEnvVars())
+                .cmds(args)
+                .stdout(TaskListener.NULL).quiet(!verbose).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to run docker image "+image);
+        }
+
+        // docker0 should be setup now, let's retrieve it
+
         NetworkInterface docker0 = NetworkInterface.getByName("docker0");
         if (docker0 != null) {
             for (InterfaceAddress address : docker0.getInterfaceAddresses()) {
@@ -211,15 +231,18 @@ public class Docker implements Closeable {
         // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
         // with boot2docker ...
         // alternatively, let's run the specified image once to discover gateway IP from the container
+        // NOTE: we assume here `ip is installed on target image, which is not the case for sample in `ubuntu:15.04`
 
-        ArgumentListBuilder args = dockerCommand()
+        args = dockerCommand()
                 .add("run", "--tty", "--rm")
+                .add("--entrypoint")
+                .add("/sbin/ip")
                 .add(image)
-                .add("/sbin/ip", "route");
+                .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        int status = launcher.launch()
+        launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
