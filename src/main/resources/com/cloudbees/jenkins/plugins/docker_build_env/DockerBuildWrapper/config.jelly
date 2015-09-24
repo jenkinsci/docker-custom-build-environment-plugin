@@ -46,6 +46,9 @@ THE SOFTWARE.
             </f:repeatableProperty>
           </f:entry>
 
+          <f:entry field="forcePull" title="force Pull">
+            <f:checkbox/>
+          </f:entry>
           <f:entry field="privileged" title="Run in privileged mode">
             <f:checkbox/>
           </f:entry>

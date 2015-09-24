@@ -104,11 +104,15 @@ public class Docker implements Closeable {
     }
 
 
-    public void buildImage(FilePath workspace, String dockerfile, String tag) throws IOException, InterruptedException {
+    public void buildImage(FilePath workspace, String dockerfile, String tag, boolean forcePull) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = dockerCommand()
-            .add("build", "--tag", tag)
-            .add("--file", dockerfile)
+            .add("build", "--tag", tag);
+
+        if (forcePull)
+            args.add("--pull");
+
+        args.add("--file", dockerfile)
             .add(workspace.getRemote());
 
         OutputStream out = listener.getLogger();

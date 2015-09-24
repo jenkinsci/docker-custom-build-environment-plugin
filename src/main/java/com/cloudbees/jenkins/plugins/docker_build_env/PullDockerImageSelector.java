@@ -24,9 +24,9 @@ public class PullDockerImageSelector extends DockerImageSelector {
     }
 
     @Override
-    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
+    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull) throws IOException, InterruptedException {
         String expandedImage = build.getEnvironment(listener).expand(image);
-        if (!docker.hasImage(expandedImage)) {
+        if (forcePull || !docker.hasImage(expandedImage)) {
             listener.getLogger().println("Pull Docker image "+expandedImage+" from repository ...");
             boolean pulled = docker.pullImage(expandedImage);
             if (!pulled) {

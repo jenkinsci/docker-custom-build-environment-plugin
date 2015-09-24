@@ -28,7 +28,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
     }
 
     @Override
-    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener) throws IOException, InterruptedException {
+    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull) throws IOException, InterruptedException {
 
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
@@ -38,7 +38,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         // search for a tagged image with this hash ID
         if (!docker.hasImage(hash)) {
             listener.getLogger().println("Build Docker image from "+expandedContextPath+"/Dockerfile ...");
-            docker.buildImage(filePath, dockerfile, hash);
+            docker.buildImage(filePath, dockerfile, hash, forcePull);
         }
 
         return hash;
