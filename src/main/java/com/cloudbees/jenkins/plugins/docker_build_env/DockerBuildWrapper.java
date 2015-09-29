@@ -195,10 +195,12 @@ public class DockerBuildWrapper extends BuildWrapper {
 
             Map<String, String> links = new HashMap<String, String>();
 
+            String[] command = this.command.length() > 0 ? this.command.split(" ") : new String[0];
+
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
                     runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
                     environment, build.getSensitiveBuildVariables(), net,
-                    command.split(" ")); // Command expected to hung until killed
+                    command); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted");
