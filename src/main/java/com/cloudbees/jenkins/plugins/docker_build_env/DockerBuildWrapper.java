@@ -207,7 +207,7 @@ public class DockerBuildWrapper extends BuildWrapper {
      */
     private EnvVars buildContainerEnvironment(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
         EnvVars env = build.getEnvironment(listener);
-        for (String key : Computer.currentComputer().buildEnvironment(listener).keySet()) {
+        for (String key : Computer.currentComputer().getEnvironment().keySet()) {
             env.remove(key);
         }
         LOGGER.log(Level.FINE, "reduced environment: {0}", env);
