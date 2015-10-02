@@ -7,6 +7,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import org.apache.commons.io.LineIterator;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
@@ -16,16 +17,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.StringReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -246,7 +246,7 @@ public class Docker implements Closeable {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        launcher.launch()
+        status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
                 .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
@@ -263,7 +263,30 @@ public class Docker implements Closeable {
     }
 
 
-    public void executeIn(String container, String userId, Launcher.ProcStarter starter) throws IOException, InterruptedException {
+    public EnvVars getEnv(String container, Launcher launcher) throws IOException, InterruptedException {
+        final ArgumentListBuilder args = dockerCommand()
+                .add("exec")
+                .add("--tty")
+                .add(container)
+                .add("env");
+
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int status = launcher.launch().cmds(args).stdout(out).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to retrieve container's environment");
+        }
+
+        EnvVars env = new EnvVars();
+        LineIterator it = new LineIterator(new StringReader(out.toString()));
+        while (it.hasNext()) {
+            env.addLine(it.nextLine());
+        }
+        return env;
+    }
+
+
+    public void executeIn(String container, String userId, Launcher.ProcStarter starter, EnvVars environment) throws IOException, InterruptedException {
         List<String> prefix = dockerCommandArgs();
         prefix.add("exec");
         prefix.add("--tty");
@@ -273,11 +296,9 @@ public class Docker implements Closeable {
         prefix.add("env");
 
         // Build a list of environment, hidding node's one
-        Set<String>  envs = new TreeSet<String>(Arrays.asList(starter.envs()));
-        for (String key : Computer.currentComputer().buildEnvironment(listener).keySet()) {
-            envs.remove(key);
+        for (Map.Entry<String, String> e : environment.entrySet()) {
+            prefix.add(e.getKey()+"=\""+e.getValue()+'\"');
         }
-        prefix.addAll(envs);
 
         starter.cmds().addAll(0, prefix);
         if (starter.masks() != null) {

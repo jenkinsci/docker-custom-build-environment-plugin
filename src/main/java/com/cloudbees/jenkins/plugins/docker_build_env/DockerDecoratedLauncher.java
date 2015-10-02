@@ -1,9 +1,11 @@
 package com.cloudbees.jenkins.plugins.docker_build_env;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
+import hudson.model.Environment;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,10 +20,13 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
     private final BuiltInContainer runInContainer;
     private final AbstractBuild build;
     private final String userId;
+    private EnvVars env;
+    private final Launcher launcher;
 
     public DockerDecoratedLauncher(DockerImageSelector selector, Launcher launcher, BuiltInContainer runInContainer,
                                    AbstractBuild build, String userId) throws IOException, InterruptedException {
         super(launcher);
+        this.launcher = launcher;
         this.selector = selector;
         this.runInContainer = runInContainer;
         this.build = build;
@@ -39,12 +44,28 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         if (!runInContainer.isEnabled()) return super.launch(starter);
 
         try {
-            runInContainer.getDocker().executeIn(runInContainer.container, userId, starter);
+            EnvVars environment = buildContainerEnvironment();
+            runInContainer.getDocker().executeIn(runInContainer.container, userId, starter, environment);
         } catch (InterruptedException e) {
             throw new IOException("Caught InterruptedException", e);
         }
 
         return super.launch(starter);
+    }
+
+    private EnvVars buildContainerEnvironment() throws IOException, InterruptedException {
+
+        if (this.env == null) {
+            this.env = runInContainer.getDocker().getEnv(runInContainer.container, launcher);
+        }
+        EnvVars environment = new EnvVars(env);
+
+        // Let BuildWrapper customize environment, including PATH
+        for (Environment e : build.getEnvironments()) {
+            e.buildEnvVars(environment);
+        }
+
+        return environment;
     }
 
 }
