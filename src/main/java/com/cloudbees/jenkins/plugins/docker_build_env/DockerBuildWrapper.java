@@ -65,11 +65,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean forcePull;
 
+    private String net;
 
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
-                              boolean forcePull) {
+                              boolean forcePull,
+                              String net) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -80,6 +82,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.group = group;
         this.command = command;
         this.forcePull = forcePull;
+        this.net = net;
     }
 
     public DockerImageSelector getSelector() {
@@ -121,6 +124,8 @@ public class DockerBuildWrapper extends BuildWrapper {
     public boolean isForcePull() {
         return forcePull;
     }
+
+    public String getNet() { return net;}
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
@@ -192,7 +197,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
                     runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
-                    environment, build.getSensitiveBuildVariables(),
+                    environment, build.getSensitiveBuildVariables(), net,
                     command.split(" ")); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
