@@ -305,7 +305,7 @@ public class Docker implements Closeable {
 
         // Build a list of environment, hidding node's one
         for (Map.Entry<String, String> e : environment.entrySet()) {
-            prefix.add(e.getKey()+"=\""+e.getValue()+'\"');
+            prefix.add(e.getKey()+"="+e.getValue());
         }
 
         starter.cmds().addAll(0, prefix);
