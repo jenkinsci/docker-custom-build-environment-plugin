@@ -8,6 +8,8 @@ import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
+
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
@@ -173,7 +175,7 @@ public class Docker implements Closeable {
             args.add("--link", link.getKey() + ":" + link.getValue());
         }
 
-        if (net.length() > 0) {
+        if (StringUtils.isNotBlank(net)) {
             args.add("--net", net);
         }
 
