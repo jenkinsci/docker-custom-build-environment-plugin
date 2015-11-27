@@ -45,12 +45,6 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
         try {
             EnvVars environment = buildContainerEnvironment();
-            // Apply environment overrides as set to original ProcStarter
-            for (String override : starter.envs()) {
-                int i = override.indexOf('=');
-                environment.override(override.substring(0,i), override.substring(i+1));
-            }
-
             runInContainer.getDocker().executeIn(runInContainer.container, userId, starter, environment);
         } catch (InterruptedException e) {
             throw new IOException("Caught InterruptedException", e);
@@ -70,8 +64,6 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         for (Environment e : build.getEnvironments()) {
             e.buildEnvVars(environment);
         }
-
-
 
         return environment;
     }
