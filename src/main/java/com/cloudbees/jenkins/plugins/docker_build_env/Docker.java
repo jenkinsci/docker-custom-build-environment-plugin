@@ -8,6 +8,7 @@ import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.apache.commons.lang.StringUtils;
 
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -106,10 +109,10 @@ public class Docker implements Closeable {
     }
 
 
-    public void buildImage(FilePath workspace, String dockerfile, String tag, boolean forcePull) throws IOException, InterruptedException {
+    public String buildImage(FilePath workspace, String dockerfile, boolean forcePull) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = dockerCommand()
-            .add("build", "--tag", tag);
+            .add("build");
 
         if (forcePull)
             args.add("--pull");
@@ -117,15 +120,31 @@ public class Docker implements Closeable {
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
 
-        OutputStream out = listener.getLogger();
+        OutputStream logOutputStream = listener.getLogger();
         OutputStream err = listener.getLogger();
+
+        ByteArrayOutputStream resultOutputStream = new ByteArrayOutputStream();
+        TeeOutputStream teeOutputStream = new TeeOutputStream(logOutputStream, resultOutputStream);
+
         int status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
-                .stdout(out).stderr(err).join();
+                .stdout(teeOutputStream).stderr(err).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");
         }
+
+        Pattern pattern = Pattern.compile("Successfully built (.*)");
+        Matcher matcher = pattern.matcher(resultOutputStream.toString("UTF-8"));
+        if (!matcher.find())
+        {
+            throw new RuntimeException("Failed to lookup the docker build ImageID.");
+        }
+        String imageId = matcher.group(1);
+        if (imageId.equals("")) {
+            throw new RuntimeException("Failed to lookup the docker build ImageID.");
+        }
+        return imageId;
     }
 
     public void kill(String container) throws IOException, InterruptedException {

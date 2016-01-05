@@ -33,15 +33,8 @@ public class DockerfileImageSelector extends DockerImageSelector {
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
 
-        String hash = filePath.act(new ComputeDockerfileChecksum(listener));
-
-        // search for a tagged image with this hash ID
-        if (!docker.hasImage(hash)) {
-            listener.getLogger().println("Build Docker image from "+expandedContextPath+"/Dockerfile ...");
-            docker.buildImage(filePath, dockerfile, hash, forcePull);
-        }
-
-        return hash;
+        listener.getLogger().println("Build Docker image from " + expandedContextPath + "/Dockerfile ...");
+        return docker.buildImage(filePath, dockerfile, forcePull);
     }
 
     @Override
