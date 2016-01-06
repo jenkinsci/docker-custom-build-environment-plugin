@@ -8,6 +8,7 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,15 +34,14 @@ public class DockerfileImageSelector extends DockerImageSelector {
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
 
-        String hash = filePath.act(new ComputeDockerfileChecksum(listener));
-
-        // search for a tagged image with this hash ID
-        if (!docker.hasImage(hash)) {
-            listener.getLogger().println("Build Docker image from "+expandedContextPath+"/Dockerfile ...");
-            docker.buildImage(filePath, dockerfile, hash, forcePull);
+        File dockerFile = new File(filePath.getRemote(), "Dockerfile");
+        if (!dockerFile.exists()) {
+            listener.getLogger().println("Your project is missing a Dockerfile");
+            throw new InterruptedException("Your project is missing a Dockerfile");
         }
 
-        return hash;
+        listener.getLogger().println("Build Docker image from " + expandedContextPath + "/Dockerfile ...");
+        return docker.buildImage(filePath, dockerfile, forcePull);
     }
 
     @Override
