@@ -46,7 +46,20 @@ THE SOFTWARE.
             </f:repeatableProperty>
           </f:entry>
 
-          <f:entry field="forcePull" title="force Pull">
+          <f:entry title="Data Volume Containers" field="dataVolumeContainers">
+            <f:repeatableProperty field="dataVolumeContainers">
+                <f:entry title="">
+                  <div align="right">
+                    <f:repeatableDeleteButton />
+                  </div>
+                </f:entry>
+            </f:repeatableProperty>
+          </f:entry>
+          <f:entry field="jenkinsMountedInDataVolumeContainer" title="Jenkins dirs in Data Volume Container">
+            <f:checkbox/>
+          </f:entry>
+
+          <f:entry field="forcePull" title="Force Pull">
             <f:checkbox/>
           </f:entry>
           <f:entry field="privileged" title="Run in privileged mode">

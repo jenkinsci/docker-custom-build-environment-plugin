@@ -27,6 +27,7 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
     private final transient Docker docker;
     private List<Integer> ports = new ArrayList<Integer>();
     private Map<String,String> volumes = new HashMap<String,String>();
+    private List<String> dataVolumeContainers = new ArrayList<String>();
 
     public BuiltInContainer(Docker docker) {
         this.docker = docker;
@@ -96,6 +97,14 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
         return volumes;
     }
 
+    public void addDataVolumeContainer(String name) {
+      dataVolumeContainers.add(name);
+    }
+
+    public List<String> getDataVolumeContainers() {
+        return dataVolumeContainers;
+    }
+
 
     public @Nonnull Map<Integer, Integer> getPortsMap() {
         Map<Integer, Integer> map = new HashMap<Integer, Integer>();
@@ -112,5 +121,18 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
             map.put(environment.expand(e.getKey()), environment.expand(e.getValue()));
         }
         return map;
+    }
+
+    public @Nonnull List<String> getDataVolumeContainers(AbstractBuild build) throws IOException, InterruptedException {
+        final EnvVars environment = build.getEnvironment(TaskListener.NULL);
+        List<String> list = new ArrayList<String>(dataVolumeContainers);
+        for (int i = 0; i < list.size(); i++) {
+          String dataVolumeContainer = list.get(i);
+          String dataVolumeContainerExpanded = environment.expand(dataVolumeContainer);
+          if (dataVolumeContainer != dataVolumeContainerExpanded) {
+            list.set(i, dataVolumeContainerExpanded);
+          }
+        }
+        return list;
     }
 }
