@@ -89,10 +89,7 @@ public class Docker implements Closeable {
     }
 
     private EnvVars getEnvVars() throws IOException, InterruptedException {
-        if (envVars == null) {
-            envVars = new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
-        }
-        return envVars;
+        return new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
