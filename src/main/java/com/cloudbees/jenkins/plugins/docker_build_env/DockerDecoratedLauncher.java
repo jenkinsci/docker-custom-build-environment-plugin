@@ -56,16 +56,9 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
     private EnvVars buildContainerEnvironment() throws IOException, InterruptedException {
 
         if (this.env == null) {
-            this.env = runInContainer.getDocker().getEnv(runInContainer.container, launcher);
+            this.env = runInContainer.getEnvVars();
         }
-        EnvVars environment = new EnvVars(env);
-
-        // Let BuildWrapper customize environment, including PATH
-        for (Environment e : build.getEnvironments()) {
-            e.buildEnvVars(environment);
-        }
-
-        return environment;
+        return new EnvVars(env);
     }
 
 }
