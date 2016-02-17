@@ -43,7 +43,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         }
 
         listener.getLogger().println("Build Docker image from " + expandedContextPath + "/"+getDockerfile()+" ...");
-        return docker.buildImage(filePath, getDockerfile(), forcePull);
+        return docker.buildImage(filePath, dockerFile.getRemote(), forcePull);
     }
 
     @Override
