@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
@@ -40,8 +42,8 @@ public class DockerfileImageSelector extends DockerImageSelector {
             throw new InterruptedException("Your project is missing a Dockerfile");
         }
 
-        listener.getLogger().println("Build Docker image from " + expandedContextPath + "/Dockerfile ...");
-        return docker.buildImage(filePath, dockerfile, forcePull);
+        listener.getLogger().println("Build Docker image from " + expandedContextPath + "/"+getDockerfile()+" ...");
+        return docker.buildImage(filePath, getDockerfile(), forcePull);
     }
 
     @Override
@@ -55,7 +57,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
     }
 
     public String getDockerfile() {
-        return dockerfile;
+        return isEmpty(dockerfile) ? "Dockerfile" : dockerfile;
     }
 
     private Object readResolve() {
