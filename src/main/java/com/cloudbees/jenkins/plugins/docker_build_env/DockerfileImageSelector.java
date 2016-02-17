@@ -37,7 +37,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
 
         File dockerFile = new File(filePath.getRemote(), "Dockerfile");
-        if (!dockerFile.exists()) {
+        if (!filePath.child("Dockerfile").exists()) {
             listener.getLogger().println("Your project is missing a Dockerfile");
             throw new InterruptedException("Your project is missing a Dockerfile");
         }
