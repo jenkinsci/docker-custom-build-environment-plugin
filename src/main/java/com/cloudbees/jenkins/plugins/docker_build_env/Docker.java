@@ -300,7 +300,10 @@ public class Docker implements Closeable {
                 .add("env");
 
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int status = launcher.launch().cmds(args).stdout(out).stderr(listener.getLogger()).join();
+        int status = launcher.launch()
+                .envs(getEnvVars())
+                .cmds(args)
+                .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
 
         if (status != 0) {
             throw new RuntimeException("Failed to retrieve container's environment");
