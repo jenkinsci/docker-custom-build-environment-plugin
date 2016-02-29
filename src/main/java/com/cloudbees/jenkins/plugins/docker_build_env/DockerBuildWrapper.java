@@ -55,9 +55,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final String dockerRegistryCredentials;
 
+    private final boolean jenkinsMountedInDataVolumeContainer;
+
     private final boolean verbose;
 
     private List<Volume> volumes;
+
+    private List<DataVolumeContainer> dataVolumeContainers;
 
     private final boolean privileged;
 
@@ -70,17 +74,19 @@ public class DockerBuildWrapper extends BuildWrapper {
     private String net;
 
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
-                              List<Volume> volumes, String group, String command,
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean jenkinsMountedInDataVolumeContainer, boolean verbose, boolean privileged,
+                              List<Volume> volumes, List<DataVolumeContainer> dataVolumeContainers, String group, String command,
                               boolean forcePull,
                               String net) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
         this.dockerRegistryCredentials = dockerRegistryCredentials;
+        this.jenkinsMountedInDataVolumeContainer = jenkinsMountedInDataVolumeContainer;
         this.verbose = verbose;
         this.privileged = privileged;
         this.volumes = volumes != null ? volumes : Collections.<Volume>emptyList();
+        this.dataVolumeContainers = dataVolumeContainers != null ? dataVolumeContainers : Collections.<DataVolumeContainer>emptyList();
         this.group = group;
         this.command = command;
         this.forcePull = forcePull;
@@ -103,6 +109,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         return dockerRegistryCredentials;
     }
 
+    public boolean isJenkinsMountedInDataVolumeContainer() {
+      return jenkinsMountedInDataVolumeContainer;
+    }
+
     public boolean isVerbose() {
         return verbose;
     }
@@ -113,6 +123,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public List<Volume> getVolumes() {
         return volumes;
+    }
+
+    public List<DataVolumeContainer> getDataVolumeContainers() {
+        return dataVolumeContainers;
     }
 
     public String getGroup() {
@@ -131,7 +145,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, jenkinsMountedInDataVolumeContainer, verbose, privileged);
 
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
@@ -147,18 +161,24 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
 
-        // mount slave root in Docker container so build process can access project workspace, tools, as well as jars copied by maven plugin.
-        final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
-        runInContainer.bindMount(root);
+        if (jenkinsMountedInDataVolumeContainer == false) {
+          // mount slave root in Docker container so build process can access
+          // project workspace, tools, as well as jars copied by maven plugin.
+          final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
+          runInContainer.bindMount(root);
 
-        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-        String tmp = build.getWorkspace().act(GetTmpdir);
-        runInContainer.bindMount(tmp);
-
-        // mount ToolIntallers installation directory so installed tools are available inside container
+          // mount tmpdir so we can access temporary file created to run shell
+          // build steps (and few others)
+          String tmp = build.getWorkspace().act(GetTmpdir);
+          runInContainer.bindMount(tmp);
+        }
 
         for (Volume volume : volumes) {
             runInContainer.bindMount(volume.getHostPath(), volume.getPath());
+        }
+
+        for (DataVolumeContainer dataVolumeContainer : dataVolumeContainers) {
+          runInContainer.addDataVolumeContainer(dataVolumeContainer.getName());
         }
 
         runInContainer.getDocker().setupCredentials(build);
@@ -200,7 +220,7 @@ public class DockerBuildWrapper extends BuildWrapper {
             String[] command = this.command.length() > 0 ? this.command.split(" ") : new String[0];
 
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
-                    runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
+                    runInContainer.getVolumes(build), runInContainer.getDataVolumeContainers(build), runInContainer.getPortsMap(), links,
                     environment, build.getSensitiveBuildVariables(), net,
                     command); // Command expected to hung until killed
 

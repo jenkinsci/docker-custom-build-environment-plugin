@@ -43,18 +43,20 @@ public class Docker implements Closeable {
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
     private final DockerRegistryEndpoint registryEndpoint;
+    private final boolean jenkinsMountedInDataVolumeContainer;
     private final boolean verbose;
     private final boolean privileged;
     private final AbstractBuild build;
     private EnvVars envVars;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean jenkinsMountedInDataVolumeContainer, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
         this.listener = listener;
         this.build = build;
+        this.jenkinsMountedInDataVolumeContainer = jenkinsMountedInDataVolumeContainer;
         this.verbose = verbose | debug;
         this.privileged = privileged;
     }
@@ -77,7 +79,7 @@ public class Docker implements Closeable {
     public boolean hasImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("inspect", image);
-        
+
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
 
@@ -98,7 +100,7 @@ public class Docker implements Closeable {
     public boolean pullImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("pull", image);
-        
+
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
@@ -173,7 +175,7 @@ public class Docker implements Closeable {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, List<String> dataVolumeContainers, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String... command) throws IOException, InterruptedException {
 
         String docker0 = getDocker0Ip(launcher, image);
 
@@ -186,6 +188,9 @@ public class Docker implements Closeable {
         args.add("--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
+        }
+        for (String dataVolumeContainer : dataVolumeContainers) {
+            args.add("--volumes-from", dataVolumeContainer);
         }
         for (Map.Entry<Integer, Integer> port : ports.entrySet()) {
             args.add("--publish", port.getKey() + ":" + port.getValue());

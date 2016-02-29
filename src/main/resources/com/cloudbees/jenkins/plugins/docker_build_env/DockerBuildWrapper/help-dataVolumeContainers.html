@@ -1,0 +1,17 @@
+Mount volumes from Data Volume Container(s) into the Docker container.
+<p>
+If you have some persistent data that you want to share between containers, or
+want to use from non-persistent containers, it’s best to create a named Data
+Volume Container, and then to mount the data from it.
+<p>
+An example of this is when Jenkins is running in a Docker container and needs to
+share its workspace and '/tmp' dir with the docker-custom-build-environment
+container. To accomplish this, create a Data Volume Container named
+'jenkinsdata' which exposes volumes '/var/jenkins_home' and '/tmp'. Mount these
+volumes in the 'jenkinsmaster' container via `--volumes-from jenkinsdata`. Once
+'jenkinsmaster' is up and running, create a job that uses the
+docker-custom-build-environment plugin and mount the same volumes by specifying
+'jenkinsdata' in the Data Volume Container Name field.
+<p>
+**NOTE** In order for the above example to work, the "Jenkins dirs in Data Volume Container"
+checkbox must also be checked.
