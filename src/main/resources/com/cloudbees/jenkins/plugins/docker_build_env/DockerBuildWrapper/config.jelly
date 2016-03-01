@@ -64,6 +64,12 @@ THE SOFTWARE.
           <f:entry field="net" title="Network bridge">
             <f:textbox default="bridge"/>
           </f:entry>
+          <f:entry field="memory" title="Memory limit">
+            <f:textbox/>
+          </f:entry>
+          <f:entry field="cpu" title="CPU shares">
+            <f:textbox/>
+          </f:entry>
         </f:advanced>
 
     </f:nested>
