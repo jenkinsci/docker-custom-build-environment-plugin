@@ -58,12 +58,15 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
         if (this.env == null) {
             this.env = runInContainer.getDocker().getEnv(runInContainer.container, launcher);
         }
+
         EnvVars environment = new EnvVars(env);
 
         // Let BuildWrapper customize environment, including PATH
         for (Environment e : build.getEnvironments()) {
             e.buildEnvVars(environment);
         }
+        
+        environment.overrideAll(build.getEnvironment());
 
         return environment;
     }
