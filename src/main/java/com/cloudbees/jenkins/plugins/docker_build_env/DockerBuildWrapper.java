@@ -73,11 +73,14 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private int pauseAfterContainerLaunch = 0;
+
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu) {
+                              String net, String memory, String cpu,
+                              boolean isLaunchPause, int pauseAfterContainerLaunch) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -91,6 +94,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.pauseAfterContainerLaunch = isLaunchPause ? pauseAfterContainerLaunch : 0;
     }
 
     public DockerImageSelector getSelector() {
@@ -131,6 +135,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public boolean isForcePull() {
         return forcePull;
+    }
+
+    public int getPauseAfterContainerLaunch() {
+        return pauseAfterContainerLaunch;
     }
 
     public String getNet() { return net;}
@@ -184,6 +192,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
             runInContainer.container = startBuildContainer(runInContainer, build, listener);
             listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
+        }
+
+        // pause after container launch if configured
+        if ( pauseAfterContainerLaunch > 0 ) {
+            listener.getLogger().println("Pausing for " + pauseAfterContainerLaunch + " seconds to allow the container to complete startup");
+            try {Thread.sleep(pauseAfterContainerLaunch * 1000);}
+            catch ( InterruptedException ex ) {}
         }
 
         // We are all set, DockerDecoratedLauncher now can wrap launcher commands with docker-exec
