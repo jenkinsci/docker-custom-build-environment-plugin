@@ -65,6 +65,8 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             e.buildEnvVars(environment);
         }
 
+        EnvVars.resolve(environment); // ensure environment is fully resolved
+
         // no need to include variables already defined by docker run
         // on the command line for each build step
         for ( String key : env.keySet() ) {
