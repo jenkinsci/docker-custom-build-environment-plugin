@@ -73,11 +73,16 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private String dockerSlaveJenkinsRoot;
+
+    private String dockerSlaveTmpDir;
+
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu) {
+                              String net, String memory, String cpu,
+                              String dockerSlaveJenkinsRoot, String dockerSlaveTmpDir) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -91,6 +96,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.dockerSlaveJenkinsRoot = dockerSlaveJenkinsRoot;
+        this.dockerSlaveTmpDir = dockerSlaveTmpDir;
     }
 
     public DockerImageSelector getSelector() {
@@ -139,6 +146,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public String getCpu() { return cpu;}
 
+    public String getDockerSlaveJenkinsRoot() { return dockerSlaveJenkinsRoot; }
+
+    public String getDockerSlaveTmpDir() { return dockerSlaveTmpDir; }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
         final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
@@ -159,11 +170,19 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         // mount slave root in Docker container so build process can access project workspace, tools, as well as jars copied by maven plugin.
         final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
-        runInContainer.bindMount(root);
+        if (isEmpty(dockerSlaveJenkinsRoot)) {
+            runInContainer.bindMount(root);
+        } else {
+            runInContainer.bindMount(dockerSlaveJenkinsRoot, root);
+        }
 
         // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
         String tmp = build.getWorkspace().act(GetTmpdir);
-        runInContainer.bindMount(tmp);
+        if (isEmpty(dockerSlaveTmpDir)) {
+            runInContainer.bindMount(tmp);
+        } else {
+            runInContainer.bindMount(dockerSlaveTmpDir, tmp);
+        }
 
         // mount ToolIntallers installation directory so installed tools are available inside container
 

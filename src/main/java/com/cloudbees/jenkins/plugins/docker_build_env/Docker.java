@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.w3c.tidy.Out;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;

@@ -70,7 +70,13 @@ THE SOFTWARE.
           <f:entry field="cpu" title="CPU shares">
             <f:textbox/>
           </f:entry>
-        </f:advanced>
+          <f:entry field="dockerSlaveJenkinsRoot" title="Docker host's JENKINS_HOME (if slave runs in a container)">
+            <f:textbox/>
+          </f:entry>
+          <f:entry field="dockerSlaveTmpDir" title="Docker host's TMPDIR for the slave (if running in a container)">
+            <f:textbox/>
+        </f:entry>
+      </f:advanced>
 
     </f:nested>
 </j:jelly>
