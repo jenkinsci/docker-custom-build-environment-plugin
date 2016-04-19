@@ -24,6 +24,8 @@ import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -168,20 +170,24 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         BuiltInContainer runInContainer = build.getAction(BuiltInContainer.class);
 
-        // mount slave root in Docker container so build process can access project workspace, tools, as well as jars copied by maven plugin.
-        final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
-        if (isEmpty(dockerSlaveJenkinsRoot)) {
-            runInContainer.bindMount(root);
-        } else {
-            runInContainer.bindMount(dockerSlaveJenkinsRoot, root);
-        }
+        try {
+            // mount slave root in Docker container so build process can access project workspace, tools, as well as jars copied by maven plugin.
+            final String root = Computer.currentComputer().getNode().getRootPath().getRemote();
+            if (isEmpty(dockerSlaveJenkinsRoot)) {
+                runInContainer.bindMount(root);
+            } else {
+                runInContainer.bindMount(TokenMacro.expand(build, listener, dockerSlaveJenkinsRoot), root);
+            }
 
-        // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
-        String tmp = build.getWorkspace().act(GetTmpdir);
-        if (isEmpty(dockerSlaveTmpDir)) {
-            runInContainer.bindMount(tmp);
-        } else {
-            runInContainer.bindMount(dockerSlaveTmpDir, tmp);
+            // mount tmpdir so we can access temporary file created to run shell build steps (and few others)
+            String tmp = build.getWorkspace().act(GetTmpdir);
+            if (isEmpty(dockerSlaveTmpDir)) {
+                runInContainer.bindMount(tmp);
+            } else {
+                runInContainer.bindMount(TokenMacro.expand(build, listener, dockerSlaveTmpDir), tmp);
+            }
+        } catch (MacroEvaluationException mee) {
+            throw new RuntimeException("Macro evaluation failed", mee);
         }
 
         // mount ToolIntallers installation directory so installed tools are available inside container

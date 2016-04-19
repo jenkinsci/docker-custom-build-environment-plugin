@@ -46,6 +46,12 @@
           <version>1.0</version>
           <optional>true</optional>
       </dependency>
+      <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>token-macro</artifactId>
+          <version>1.10</version>
+          <optional>true</optional>
+      </dependency>
   </dependencies>
 
 
