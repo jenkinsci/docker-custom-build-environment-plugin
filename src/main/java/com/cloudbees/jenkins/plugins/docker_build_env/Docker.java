@@ -140,7 +140,13 @@ public class Docker implements Closeable {
         {
             throw new RuntimeException("Failed to lookup the docker build ImageID.");
         }
-        String imageId = matcher.group(1);
+
+        // find the last occurrence of "Successfully built"
+        String imageId;
+        do {
+            imageId = matcher.group(matcher.groupCount());
+        } while (matcher.find());
+
         if (imageId.equals("")) {
             throw new RuntimeException("Failed to lookup the docker build ImageID.");
         }
