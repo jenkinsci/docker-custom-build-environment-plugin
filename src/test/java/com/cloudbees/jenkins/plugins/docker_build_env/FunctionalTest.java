@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class FunctionalTests {
+public class FunctionalTest {
 
     @Rule  // @ClassRule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -51,7 +51,7 @@ public class FunctionalTests {
 
         project.getBuildWrappersList().add(
                 new DockerBuildWrapper(
-                        new DockerfileImageSelector(".", "$WORKSPACE/Dockerfile"),
+                        new DockerfileImageSelector(".", "Dockerfile"),
                         "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null)
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
