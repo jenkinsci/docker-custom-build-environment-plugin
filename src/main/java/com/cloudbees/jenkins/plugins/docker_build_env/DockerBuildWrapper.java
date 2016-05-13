@@ -22,11 +22,13 @@ import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -198,6 +200,10 @@ public class DockerBuildWrapper extends BuildWrapper {
     }
 
 
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
 
     private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
         try {
@@ -209,7 +215,8 @@ public class DockerBuildWrapper extends BuildWrapper {
 
             String[] command = this.command.length() > 0 ? this.command.split(" ") : new String[0];
 
-            return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
+            return runInContainer.getDocker().runDetached(getDescriptor().getImageSbinIp(),
+                    runInContainer.image, workdir,
                     runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
                     environment, build.getSensitiveBuildVariables(), net, memory, cpu,
                     command); // Command expected to hung until killed
@@ -252,13 +259,43 @@ public class DockerBuildWrapper extends BuildWrapper {
     @Extension
     public static class DescriptorImpl extends BuildWrapperDescriptor {
 
+        private String imageSbinIp;
+
+        public DescriptorImpl() {
+            super();
+            load();
+            initDefaults();
+        }
+
+        private void initDefaults() {
+            if (imageSbinIp == null) {
+                imageSbinIp = "alpine:3.2";
+            }
+        }
+
         @Override
         public String getDisplayName() {
             return "Build inside a Docker container";
         }
 
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            imageSbinIp = json.getString("imageSbinIp");
+            save();
+            return true;
+        }
+
         public Collection<Descriptor<DockerImageSelector>> selectors() {
             return Jenkins.getInstance().getDescriptorList(DockerImageSelector.class);
+        }
+
+        public String getImageSbinIp() {
+            return imageSbinIp;
+        }
+
+        protected Object readResolve() {
+            initDefaults();
+            return this;
         }
 
         @Override

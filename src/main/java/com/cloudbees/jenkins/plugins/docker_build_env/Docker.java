@@ -173,9 +173,9 @@ public class Docker implements Closeable {
             throw new RuntimeException("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String... command) throws IOException, InterruptedException {
+    public String runDetached(String imageSbinIp, String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String... command) throws IOException, InterruptedException {
 
-        String docker0 = getDocker0Ip(launcher, image);
+        String docker0 = getDocker0Ip(launcher, imageSbinIp);
 
 
         ArgumentListBuilder args = dockerCommand()
