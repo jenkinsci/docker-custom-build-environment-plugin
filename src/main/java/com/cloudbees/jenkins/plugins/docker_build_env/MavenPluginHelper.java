@@ -16,8 +16,8 @@ public class MavenPluginHelper extends TcpSocketHostLocator {
     @Override
     public String getTcpSocketHost() throws IOException {
         try {
-            InetAddress.getByName("dockerhost");
-            return "dockerhost";
+            InetAddress.getByName("jenkinshost");
+            return "jenkinshost";
         } catch (UnknownHostException e) {
             // we are not running inside a Docker container;
             return null;
