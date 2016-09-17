@@ -179,7 +179,7 @@ public class Docker implements Closeable {
 
 
         ArgumentListBuilder args = dockerCommand()
-            .add("run", "--tty", "--detach");
+            .add("run", "--detach");
         if (privileged) {
             args.add( "--privileged");
         }
@@ -275,7 +275,7 @@ public class Docker implements Closeable {
         // NOTE: alpine:3.2 has a size of 2MB and contains the `/sbin/ip` binary
 
         args = dockerCommand()
-                .add("run", "--tty", "--rm")
+                .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
                 .add("alpine:3.2")
@@ -303,7 +303,6 @@ public class Docker implements Closeable {
     public EnvVars getEnv(String container, Launcher launcher) throws IOException, InterruptedException {
         final ArgumentListBuilder args = dockerCommand()
                 .add("exec")
-                .add("--tty")
                 .add(container)
                 .add("env");
 
@@ -329,7 +328,6 @@ public class Docker implements Closeable {
     public void executeIn(String container, String userId, Launcher.ProcStarter starter, EnvVars environment) throws IOException, InterruptedException {
         List<String> prefix = dockerCommandArgs();
         prefix.add("exec");
-        prefix.add("--tty");
         prefix.add("--user");
         prefix.add(userId);
         prefix.add(container);
