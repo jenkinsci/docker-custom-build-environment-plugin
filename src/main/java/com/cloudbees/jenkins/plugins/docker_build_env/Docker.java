@@ -179,7 +179,7 @@ public class Docker implements Closeable {
 
 
         ArgumentListBuilder args = dockerCommand()
-            .add("run", "--detach");
+            .add("run", "--tty", "--detach");
         if (privileged) {
             args.add( "--privileged");
         }
