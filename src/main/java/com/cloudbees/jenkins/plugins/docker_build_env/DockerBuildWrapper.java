@@ -203,6 +203,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         try {
             EnvVars environment = buildContainerEnvironment(build, listener);
 
+            runInContainer.setEnvVars(environment);
+
             String workdir = build.getWorkspace().getRemote();
 
             Map<String, String> links = new HashMap<String, String>();
