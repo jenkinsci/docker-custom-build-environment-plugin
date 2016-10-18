@@ -55,6 +55,9 @@ THE SOFTWARE.
           <f:entry field="verbose" title="Verbose">
             <f:checkbox/>
           </f:entry>
+          <f:entry field="sudo" title="Use sudo">
+            <f:checkbox/>
+          </f:entry>
           <f:entry field="group" title="User group">
             <f:textbox/>
           </f:entry>
