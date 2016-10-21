@@ -57,8 +57,6 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean verbose;
 
-    private final boolean sudo;
-
     private List<Volume> volumes;
 
     private final boolean privileged;
@@ -75,17 +73,18 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private final boolean sudo;
+
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean sudo, boolean privileged,
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu) {
+                              String net, String memory, String cpu, boolean sudo) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
         this.dockerRegistryCredentials = dockerRegistryCredentials;
         this.verbose = verbose;
-        this.sudo = sudo;
         this.privileged = privileged;
         this.volumes = volumes != null ? volumes : Collections.<Volume>emptyList();
         this.group = group;
@@ -94,6 +93,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.sudo = sudo;
     }
 
     public DockerImageSelector getSelector() {
@@ -148,7 +148,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, sudo, privileged);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged, sudo);
 
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);

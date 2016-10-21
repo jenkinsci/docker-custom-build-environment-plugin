@@ -44,12 +44,12 @@ public class Docker implements Closeable {
     private final DockerServerEndpoint dockerHost;
     private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
-    private final boolean sudo;
     private final boolean privileged;
     private final AbstractBuild build;
     private EnvVars envVars;
+    private final boolean sudo;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean sudo, boolean privileged) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged, boolean sudo) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
@@ -57,8 +57,8 @@ public class Docker implements Closeable {
         this.listener = listener;
         this.build = build;
         this.verbose = verbose | debug;
-        this.sudo = sudo;
         this.privileged = privileged;
+        this.sudo = sudo;
     }
 
 
