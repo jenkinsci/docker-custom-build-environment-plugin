@@ -56,7 +56,7 @@ THE SOFTWARE.
             <f:checkbox/>
           </f:entry>
           <f:entry field="sudo" title="Use sudo">
-            <f:checkbox/>
+            <f:checkbox default="true"/>
           </f:entry>
           <f:entry field="group" title="User group">
             <f:textbox/>
