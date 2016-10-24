@@ -79,6 +79,10 @@ public class Docker implements Closeable {
     public boolean hasImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("inspect", image);
+
+        if(sudo) {
+            args.prepend("sudo");
+        }
         
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
@@ -161,6 +165,9 @@ public class Docker implements Closeable {
         ArgumentListBuilder args = dockerCommand()
             .add("kill", container);
 
+        if(sudo) {
+            args.prepend("sudo");
+        }
 
         listener.getLogger().println("Stopping Docker container after build completion");
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
@@ -261,6 +268,10 @@ public class Docker implements Closeable {
                 .add("--entrypoint")
                 .add("/bin/true")
                 .add("alpine:3.2");
+
+        if(sudo) {
+            args.prepend("sudo");
+        }
 
         int status = launcher.launch()
                 .envs(getEnvVars())
