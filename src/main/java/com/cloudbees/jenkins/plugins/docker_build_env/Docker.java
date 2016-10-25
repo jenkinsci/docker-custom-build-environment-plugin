@@ -306,6 +306,10 @@ public class Docker implements Closeable {
                 .add("alpine:3.2")
                 .add("route");
 
+        if(sudo) {
+            args.prepend("sudo");
+        }
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         status = launcher.launch()
@@ -331,6 +335,10 @@ public class Docker implements Closeable {
                 .add("--tty")
                 .add(container)
                 .add("env");
+
+        if(sudo) {
+            args.prepend("sudo");
+        }
 
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         int status = launcher.launch()
@@ -363,6 +371,10 @@ public class Docker implements Closeable {
         // Build a list of environment, hidding node's one
         for (Map.Entry<String, String> e : environment.entrySet()) {
             prefix.add(e.getKey()+"="+e.getValue());
+        }
+
+        if(sudo) {
+            prefix.add(0, "sudo");
         }
 
         starter.cmds().addAll(0, prefix);
