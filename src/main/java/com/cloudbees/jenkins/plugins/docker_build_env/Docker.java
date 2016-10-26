@@ -182,6 +182,11 @@ public class Docker implements Closeable {
         args = new ArgumentListBuilder()
             .add(dockerExecutable)
             .add("rm", "--force", container);
+
+        if(sudo) {
+            args.prepend("sudo");
+        }
+
         status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
