@@ -75,11 +75,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean sudo;
 
+    private String protectedEnvironmentVariables;
+
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu, boolean sudo) {
+                              String net, String memory, String cpu, boolean sudo, String protectedEnvironmentVariables) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -94,6 +96,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.memory = memory;
         this.cpu = cpu;
         this.sudo = sudo;
+        this.protectedEnvironmentVariables = protectedEnvironmentVariables;
     }
 
     public DockerImageSelector getSelector() {
@@ -136,6 +139,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         return command;
     }
 
+    public String getProtectedEnvironmentVariables() {
+        return protectedEnvironmentVariables;
+    }
+
     public boolean isForcePull() {
         return forcePull;
     }
@@ -148,7 +155,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged, sudo);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged, sudo, protectedEnvironmentVariables);
 
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
