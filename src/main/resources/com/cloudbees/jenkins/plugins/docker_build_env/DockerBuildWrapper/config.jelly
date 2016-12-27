@@ -55,11 +55,17 @@ THE SOFTWARE.
           <f:entry field="verbose" title="Verbose">
             <f:checkbox/>
           </f:entry>
+          <f:entry field="sudo" title="Use sudo">
+            <f:checkbox default="true"/>
+          </f:entry>
           <f:entry field="group" title="User group">
             <f:textbox/>
           </f:entry>
           <f:entry field="command" title="Container start command">
             <f:textbox default="/bin/cat"/>
+          </f:entry>
+          <f:entry field="protectedEnvironmentVariables" title="Protected environment variables">
+            <f:textbox default="PATH"/>
           </f:entry>
           <f:entry field="net" title="Network bridge">
             <f:textbox default="bridge"/>

@@ -26,6 +26,8 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,8 +49,14 @@ public class Docker implements Closeable {
     private final boolean privileged;
     private final AbstractBuild build;
     private EnvVars envVars;
+    private final boolean sudo;
+    private final Set<String> protectedEnvironmentVariables;
 
     public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
+        this(dockerHost, dockerInstallation, credentialsId, build, launcher, listener, verbose, privileged, false, "");
+    }
+
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged, boolean sudo, String protectedEnvironmentVariables) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
@@ -57,6 +65,18 @@ public class Docker implements Closeable {
         this.build = build;
         this.verbose = verbose | debug;
         this.privileged = privileged;
+        this.sudo = sudo;
+
+        this.protectedEnvironmentVariables = new HashSet<String>();
+        if(protectedEnvironmentVariables != null) {
+            for (final String variable : Arrays.asList(protectedEnvironmentVariables.split(","))) {
+                final String trimmedVariable = variable.trim();
+                if (trimmedVariable.isEmpty()) {
+                    continue;
+                }
+                this.protectedEnvironmentVariables.add(trimmedVariable);
+            }
+        }
     }
 
 
@@ -77,6 +97,8 @@ public class Docker implements Closeable {
     public boolean hasImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("inspect", image);
+
+        prependSudoIfNecessary(args);
         
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
@@ -98,6 +120,8 @@ public class Docker implements Closeable {
     public boolean pullImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("pull", image);
+
+        prependSudoIfNecessary(args);
         
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
@@ -119,6 +143,8 @@ public class Docker implements Closeable {
 
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
+
+        prependSudoIfNecessary(args);
 
         OutputStream logOutputStream = listener.getLogger();
         OutputStream err = listener.getLogger();
@@ -151,6 +177,9 @@ public class Docker implements Closeable {
         ArgumentListBuilder args = dockerCommand()
             .add("kill", container);
 
+        if(sudo) {
+            args.prepend("sudo");
+        }
 
         listener.getLogger().println("Stopping Docker container after build completion");
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
@@ -165,6 +194,9 @@ public class Docker implements Closeable {
         args = new ArgumentListBuilder()
             .add(dockerExecutable)
             .add("rm", "--force", container);
+
+        prependSudoIfNecessary(args);
+
         status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
@@ -212,7 +244,7 @@ public class Docker implements Closeable {
         }
 
         for (Map.Entry<String, String> e : environment.entrySet()) {
-            if ("HOSTNAME".equals(e.getKey())) {
+            if ("HOSTNAME".equals(e.getKey()) || protectedEnvironmentVariables.contains(e.getKey())) {
                 continue;
             }
             args.add("--env");
@@ -222,6 +254,8 @@ public class Docker implements Closeable {
                 args.add(e.getKey()+"="+e.getValue());
         }
         args.add(image).add(command);
+
+        prependSudoIfNecessary(args);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -247,6 +281,8 @@ public class Docker implements Closeable {
                 .add("--entrypoint")
                 .add("/bin/true")
                 .add("alpine:3.2");
+
+        prependSudoIfNecessary(args);
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -281,6 +317,8 @@ public class Docker implements Closeable {
                 .add("alpine:3.2")
                 .add("route");
 
+        prependSudoIfNecessary(args);
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         status = launcher.launch()
@@ -306,6 +344,8 @@ public class Docker implements Closeable {
                 .add("--tty")
                 .add(container)
                 .add("env");
+
+        prependSudoIfNecessary(args);
 
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         int status = launcher.launch()
@@ -337,7 +377,14 @@ public class Docker implements Closeable {
 
         // Build a list of environment, hidding node's one
         for (Map.Entry<String, String> e : environment.entrySet()) {
+            if(protectedEnvironmentVariables.contains(e.getKey())) {
+                continue;
+            }
             prefix.add(e.getKey()+"="+e.getValue());
+        }
+
+        if(sudo) {
+            prefix.add(0, "sudo");
         }
 
         starter.cmds().addAll(0, prefix);
@@ -366,5 +413,11 @@ public class Docker implements Closeable {
             args.add(dockerHost.getUri());
         }
         return args;
+    }
+
+    private void prependSudoIfNecessary(final ArgumentListBuilder argumentListBuilder) {
+        if(sudo) {
+            argumentListBuilder.prepend("sudo");
+        }
     }
 }

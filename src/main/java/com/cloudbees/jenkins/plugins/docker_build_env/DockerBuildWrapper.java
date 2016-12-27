@@ -73,11 +73,22 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
-    @DataBoundConstructor
+    private final boolean sudo;
+
+    private String protectedEnvironmentVariables;
+
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
                               String net, String memory, String cpu) {
+        this(selector, dockerInstallation, dockerHost, dockerRegistryCredentials, verbose, privileged, volumes, group, command, forcePull, net, memory, cpu, false, "");
+    }
+
+    @DataBoundConstructor
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
+                              List<Volume> volumes, String group, String command,
+                              boolean forcePull,
+                              String net, String memory, String cpu, boolean sudo, String protectedEnvironmentVariables) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -91,6 +102,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.sudo = sudo;
+        this.protectedEnvironmentVariables = protectedEnvironmentVariables;
     }
 
     public DockerImageSelector getSelector() {
@@ -113,6 +126,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         return verbose;
     }
 
+    public boolean isSudo() {
+        return sudo;
+    }
+
     public boolean isPrivileged() {
         return privileged;
     }
@@ -129,6 +146,13 @@ public class DockerBuildWrapper extends BuildWrapper {
         return command;
     }
 
+    public String getProtectedEnvironmentVariables() {
+        if (protectedEnvironmentVariables == null) {
+            return "";
+        }
+        return protectedEnvironmentVariables;
+    }
+
     public boolean isForcePull() {
         return forcePull;
     }
@@ -141,7 +165,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged, sudo, protectedEnvironmentVariables);
 
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
