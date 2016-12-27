@@ -77,6 +77,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String protectedEnvironmentVariables;
 
+    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
+                              List<Volume> volumes, String group, String command,
+                              boolean forcePull,
+                              String net, String memory, String cpu) {
+        this(selector, dockerInstallation, dockerHost, dockerRegistryCredentials, verbose, privileged, volumes, group, command, forcePull, net, memory, cpu, false, "");
+    }
+
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
@@ -140,6 +147,9 @@ public class DockerBuildWrapper extends BuildWrapper {
     }
 
     public String getProtectedEnvironmentVariables() {
+        if (protectedEnvironmentVariables == null) {
+            return "";
+        }
         return protectedEnvironmentVariables;
     }
 
