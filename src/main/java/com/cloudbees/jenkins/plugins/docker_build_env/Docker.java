@@ -295,7 +295,7 @@ public class Docker implements Closeable {
         String route = out.toString("UTF-8").trim();
 
         // ensures that the the default IP exists so that the return is not null
-        if (route.indexOf("default") ==  -1){
+        if (!route.contains("default")) {
             throw new RuntimeException("Default IP does not exist");
         }
 
