@@ -120,6 +120,9 @@ public class Docker implements Closeable {
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
 
+        args.add("--label", "jenkins-project=" + this.build.getProject().getName());
+        args.add("--label", "jenkins-build-number=" + this.build.getNumber());
+
         OutputStream logOutputStream = listener.getLogger();
         OutputStream err = listener.getLogger();
 
@@ -180,6 +183,8 @@ public class Docker implements Closeable {
 
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
+        args.add("--name", this.build.getProject().getName() + "-" + this.build.getNumber());
+
         if (privileged) {
             args.add( "--privileged");
         }
