@@ -8,25 +8,16 @@
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>docker-custom-build-environment</artifactId>
-  <name>CloudBees Docker Custom Build Environment Plugin</name>
+  <name>Docker Custom Build Environment Plugin</name>
   <version>1.6.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/CloudBees+Docker+Custom+Build+Environment+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
   <licenses>
     <license>
       <name>MIT</name>
     </license>
   </licenses>
-
-  <developers>
-      <developer>
-          <id>ndeloof</id>
-          <email>nicolas.deloof@gmail.com</email>
-          <organization>CloudBees</organization>
-          <timezone>UTC+1</timezone>
-      </developer>
-  </developers>
 
   <dependencies>
       <dependency>
