@@ -109,13 +109,16 @@ public class Docker implements Closeable {
     }
 
 
-    public String buildImage(FilePath workspace, String dockerfile, boolean forcePull) throws IOException, InterruptedException {
+    public String buildImage(FilePath workspace, String dockerfile, boolean forcePull, boolean noCache) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = dockerCommand()
             .add("build");
 
         if (forcePull)
             args.add("--pull");
+
+        if (noCache)
+            args.add("--no-cache");
 
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
