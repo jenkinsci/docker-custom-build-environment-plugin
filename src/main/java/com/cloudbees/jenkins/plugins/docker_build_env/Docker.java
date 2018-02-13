@@ -66,7 +66,7 @@ public class Docker implements Closeable {
         this.build = build;
         this.verbose = verbose | debug;
         this.privileged = privileged;
-        this.alpineImage = alpineImage;
+        this.alpineImage = alpineImage != null ? alpineImage : "alpine:3.2";
     }
 
 

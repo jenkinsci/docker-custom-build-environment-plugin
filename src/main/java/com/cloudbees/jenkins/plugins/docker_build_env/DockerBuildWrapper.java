@@ -104,7 +104,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
-        this.alpineImage = alpineImage;
+        this.alpineImage = alpineImage != null ? alpineImage : "alpine:3.2";
     }
 
     public DockerImageSelector getSelector() {
