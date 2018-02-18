@@ -251,7 +251,7 @@ public class Docker implements Closeable {
                 .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/bin/true")
-                .add("alpine:3.2");
+                .add("alpine:3.6");
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -277,12 +277,12 @@ public class Docker implements Closeable {
         // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
         // with boot2docker ...
         // alternatively, let's run the specified image once to discover gateway IP from the container
-        // NOTE: alpine:3.2 has a size of 2MB and contains the `/sbin/ip` binary
+        // NOTE: alpine:3.6 has a size of 2MB and contains the `/sbin/ip` binary
         args = dockerCommand()
                 .add("run", "--tty", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
-                .add("alpine:3.2")
+                .add("alpine:3.6")
                 .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
