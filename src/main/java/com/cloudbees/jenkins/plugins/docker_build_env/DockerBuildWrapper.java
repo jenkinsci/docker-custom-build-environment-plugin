@@ -43,6 +43,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
+ *
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class DockerBuildWrapper extends BuildWrapper {
@@ -73,11 +74,23 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private String alpineImage;
+
     @DataBoundConstructor
-    public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
-                              List<Volume> volumes, String group, String command,
+    public DockerBuildWrapper(DockerImageSelector selector,
+                              String dockerInstallation,
+                              DockerServerEndpoint dockerHost,
+                              String dockerRegistryCredentials,
+                              boolean verbose,
+                              boolean privileged,
+                              List<Volume> volumes,
+                              String group,
+                              String command,
                               boolean forcePull,
-                              String net, String memory, String cpu) {
+                              String net,
+                              String memory,
+                              String cpu,
+                              String alpineImage) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -91,6 +104,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.alpineImage = alpineImage != null ? alpineImage : "alpine:3.2";
     }
 
     public DockerImageSelector getSelector() {
@@ -133,15 +147,25 @@ public class DockerBuildWrapper extends BuildWrapper {
         return forcePull;
     }
 
-    public String getNet() { return net;}
+    public String getNet() {
+        return net;
+    }
 
-    public String getMemory() { return memory;}
+    public String getMemory() {
+        return memory;
+    }
 
-    public String getCpu() { return cpu;}
+    public String getCpu() {
+        return cpu;
+    }
+
+    public String getAlpineImage() {
+        return alpineImage;
+    }
 
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
+        final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged, alpineImage);
 
         final BuiltInContainer runInContainer = new BuiltInContainer(docker);
         build.addAction(runInContainer);
@@ -198,7 +222,6 @@ public class DockerBuildWrapper extends BuildWrapper {
     }
 
 
-
     private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
         try {
             EnvVars environment = buildContainerEnvironment(build, listener);
@@ -245,7 +268,7 @@ public class DockerBuildWrapper extends BuildWrapper {
             launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
             gid = bos2.toString().trim();
         }
-        return uid+":"+gid;
+        return uid + ":" + gid;
 
     }
 
@@ -299,7 +322,7 @@ public class DockerBuildWrapper extends BuildWrapper {
     private Object readResolve() {
         if (volumes == null) volumes = new ArrayList<Volume>();
         if (exposeDocker) {
-            this.volumes.add(new Volume("/var/run/docker.sock","/var/run/docker.sock"));
+            this.volumes.add(new Volume("/var/run/docker.sock", "/var/run/docker.sock"));
         }
         if (command == null) command = "/bin/cat";
         return this;
