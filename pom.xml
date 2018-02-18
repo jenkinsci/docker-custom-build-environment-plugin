@@ -21,10 +21,10 @@
 
   <developers>
       <developer>
-          <id>ndeloof</id>
-          <email>nicolas.deloof@gmail.com</email>
-          <organization>CloudBees</organization>
-          <timezone>UTC+1</timezone>
+          <id>jonhermansen</id>
+          <email>jon.hermansen@gmail.com</email>
+          <organization>Jon Hermansen</organization>
+          <timezone>UTC-5</timezone>
       </developer>
   </developers>
 
