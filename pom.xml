@@ -9,15 +9,24 @@
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>docker-custom-build-environment</artifactId>
   <name>Docker Custom Build Environment Plugin</name>
-  <version>1.6.6-SNAPSHOT</version>
+  <version>1.7.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
   <licenses>
     <license>
       <name>MIT</name>
     </license>
   </licenses>
+
+  <developers>
+      <developer>
+          <id>jonhermansen</id>
+          <email>jon.hermansen@gmail.com</email>
+          <organization>Jon Hermansen</organization>
+          <timezone>UTC-5</timezone>
+      </developer>
+  </developers>
 
   <dependencies>
       <dependency>
@@ -60,7 +69,7 @@
     <url>https://github.com/jenkinsci/docker-custom-build-environment-plugin</url>
     <connection>scm:git:https://github.com/jenkinsci/docker-custom-build-environment-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/docker-custom-build-environment-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>docker-custom-build-environment-1.7.0</tag>
   </scm>
 
   <build>

@@ -77,7 +77,7 @@ public class Docker implements Closeable {
     public boolean hasImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("inspect", image);
-        
+
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
 
@@ -98,7 +98,7 @@ public class Docker implements Closeable {
     public boolean pullImage(String image) throws IOException, InterruptedException {
         ArgumentListBuilder args = dockerCommand()
             .add("pull", image);
-        
+
         OutputStream out = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         OutputStream err = verbose ? listener.getLogger() : new ByteArrayOutputStream();
         int status = launcher.launch()
@@ -140,7 +140,13 @@ public class Docker implements Closeable {
         {
             throw new RuntimeException("Failed to lookup the docker build ImageID.");
         }
-        String imageId = matcher.group(1);
+
+        // find the last occurrence of "Successfully built"
+        String imageId;
+        do {
+            imageId = matcher.group(matcher.groupCount());
+        } while (matcher.find());
+
         if (imageId.equals("")) {
             throw new RuntimeException("Failed to lookup the docker build ImageID.");
         }
@@ -161,7 +167,6 @@ public class Docker implements Closeable {
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
             throw new RuntimeException("Failed to stop docker container "+container);
-
         args = new ArgumentListBuilder()
             .add(dockerExecutable)
             .add("rm", "--force", container);
@@ -170,7 +175,7 @@ public class Docker implements Closeable {
                 .cmds(args)
                 .stdout(out).stderr(err).quiet(!verbose).join();
         if (status != 0)
-            throw new RuntimeException("Failed to remove docker container "+container);
+            listener.getLogger().println("Failed to remove docker container "+container);
     }
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String... command) throws IOException, InterruptedException {
@@ -246,7 +251,7 @@ public class Docker implements Closeable {
                 .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/bin/true")
-                .add("alpine:3.2");
+                .add("alpine:3.6");
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -272,13 +277,12 @@ public class Docker implements Closeable {
         // Docker daemon might be configured with a custom bridge, or maybe we are just running from Windows/OSX
         // with boot2docker ...
         // alternatively, let's run the specified image once to discover gateway IP from the container
-        // NOTE: alpine:3.2 has a size of 2MB and contains the `/sbin/ip` binary
-
+        // NOTE: alpine:3.6 has a size of 2MB and contains the `/sbin/ip` binary
         args = dockerCommand()
                 .add("run", "--tty", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
-                .add("alpine:3.2")
+                .add("alpine:3.6")
                 .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();

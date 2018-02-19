@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-@Extension(ordinal = 99)
+@Extension(ordinal = 99, optional = true)
 public class MavenPluginHelper extends TcpSocketHostLocator {
 
     @Override
