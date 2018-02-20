@@ -3,13 +3,13 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.609</version>
+    <version>2.21</version>
   </parent>
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>docker-custom-build-environment</artifactId>
   <name>Docker Custom Build Environment Plugin</name>
-  <version>1.7.1-SNAPSHOT</version>
+  <version>1.7.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
@@ -21,8 +21,9 @@
 
   <developers>
       <developer>
-          <id>jonhermansen</id>
           <email>jon.hermansen@gmail.com</email>
+          <id>jonhermansen</id>
+          <name>Jon Hermansen</name>
           <organization>Jon Hermansen</organization>
           <timezone>UTC-5</timezone>
       </developer>
@@ -75,11 +76,21 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <configuration>
+          <loggers>
+            <org.jenkinsci.plugins.workflow>FINE</org.jenkinsci.plugins.workflow>
+            <org.jenkinsci.plugins.durabletask>FINE</org.jenkinsci.plugins.durabletask>
+          </loggers>
+        </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <properties>
+    <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
+    <findbugs.failOnError>false</findbugs.failOnError>
+  </properties>
 
 </project>
