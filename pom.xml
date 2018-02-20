@@ -88,4 +88,9 @@
     </plugins>
   </build>
 
+  <properties>
+    <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
+    <findbugs.failOnError>false</findbugs.failOnError>
+  </properties>
+
 </project>
