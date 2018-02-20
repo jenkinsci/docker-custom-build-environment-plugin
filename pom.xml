@@ -21,8 +21,9 @@
 
   <developers>
       <developer>
-          <id>jonhermansen</id>
           <email>jon.hermansen@gmail.com</email>
+          <id>jonhermansen</id>
+          <name>Jon Hermansen</name>
           <organization>Jon Hermansen</organization>
           <timezone>UTC-5</timezone>
       </developer>
