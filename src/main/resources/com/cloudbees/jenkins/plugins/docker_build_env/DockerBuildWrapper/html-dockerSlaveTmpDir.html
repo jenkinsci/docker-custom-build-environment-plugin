@@ -1,0 +1,14 @@
+Define the path that should be used to volume bind the slave's <code>/tmp</code> directory (as defined by
+the <code>java.io.tmpdir</code> system property).
+<p>
+    This is useful if the Jenkins slave itself is running inside Docker. In order for it to successfully
+    share its <code>/tmp</code> directory with the build container, both must be volume-bound from
+    a directory on the Docker host. This setting specifies the host path of that directory.
+</p>
+<p>
+    Example : <code>/var/lib/jenkins_tmp</code>
+</p>
+<p>
+    Please note that the Jenkins slave running in Docker must also be configured to volume-bind the
+    same temporary directory to its <code>/tmp</code> (or whatever <code>java.io.tmpdir</code> points to).
+</p>
