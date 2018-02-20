@@ -76,9 +76,14 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <configuration>
+          <loggers>
+            <org.jenkinsci.plugins.workflow>FINE</org.jenkinsci.plugins.workflow>
+            <org.jenkinsci.plugins.durabletask>FINE</org.jenkinsci.plugins.durabletask>
+          </loggers>
+        </configuration>
       </plugin>
     </plugins>
   </build>
