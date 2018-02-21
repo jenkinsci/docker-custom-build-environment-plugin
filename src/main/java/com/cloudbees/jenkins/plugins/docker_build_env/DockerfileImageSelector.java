@@ -31,7 +31,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
     }
 
     @Override
-    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull) throws IOException, InterruptedException {
+    public String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull, boolean noCache) throws IOException, InterruptedException {
 
         String expandedContextPath = build.getEnvironment(listener).expand(contextPath);
         FilePath filePath = build.getWorkspace().child(expandedContextPath);
@@ -43,7 +43,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
         }
 
         listener.getLogger().println("Build Docker image from " + expandedContextPath + "/"+getDockerfile()+" ...");
-        return docker.buildImage(filePath, dockerFile.getRemote(), forcePull);
+        return docker.buildImage(filePath, dockerFile.getRemote(), forcePull, noCache);
     }
 
     @Override
