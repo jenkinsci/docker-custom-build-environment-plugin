@@ -133,6 +133,7 @@ public class Docker implements Closeable {
         TeeOutputStream teeOutputStream = new TeeOutputStream(logOutputStream, resultOutputStream);
 
         int status = launcher.launch()
+                .pwd(workspace)
                 .envs(getEnvVars())
                 .cmds(args)
                 .stdout(teeOutputStream).stderr(err).join();
