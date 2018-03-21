@@ -73,6 +73,8 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private final boolean noCache;
+
     /**
      * Variable name to pass user:group IDs to the container launch script in its environment.
      */
@@ -87,7 +89,7 @@ public class DockerBuildWrapper extends BuildWrapper {
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu) {
+                              String net, String memory, String cpu, boolean noCache) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -101,6 +103,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.noCache = noCache;
     }
 
     public DockerImageSelector getSelector() {
@@ -149,6 +152,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public String getCpu() { return cpu;}
 
+    public boolean isNoCache() {
+        return noCache;
+    }
+
     @Override
     public Launcher decorateLauncher(final AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
         final Docker docker = new Docker(dockerHost, dockerInstallation, dockerRegistryCredentials, build, launcher, listener, verbose, privileged);
@@ -186,7 +193,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         if (runInContainer.container == null) {
             if (runInContainer.image == null) {
                 try {
-                    runInContainer.image = selector.prepareDockerImage(runInContainer.getDocker(), build, listener, forcePull);
+                    runInContainer.image = selector.prepareDockerImage(runInContainer.getDocker(), build, listener, forcePull, noCache);
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Interrupted");
                 }

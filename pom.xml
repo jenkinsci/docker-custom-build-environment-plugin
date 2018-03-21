@@ -3,15 +3,15 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.609</version>
+    <version>2.21</version>
   </parent>
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>docker-custom-build-environment</artifactId>
-  <name>CloudBees Docker Custom Build Environment Plugin</name>
-  <version>1.6.6-SNAPSHOT</version>
+  <name>Docker Custom Build Environment Plugin</name>
+  <version>1.7.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/CloudBees+Docker+Custom+Build+Environment+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
   <licenses>
     <license>
@@ -21,10 +21,11 @@
 
   <developers>
       <developer>
-          <id>ndeloof</id>
-          <email>nicolas.deloof@gmail.com</email>
-          <organization>CloudBees</organization>
-          <timezone>UTC+1</timezone>
+          <email>jon.hermansen@gmail.com</email>
+          <id>jonhermansen</id>
+          <name>Jon Hermansen</name>
+          <organization>Jon Hermansen</organization>
+          <timezone>UTC-5</timezone>
       </developer>
   </developers>
 
@@ -54,14 +55,14 @@
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -69,17 +70,27 @@
     <url>https://github.com/jenkinsci/docker-custom-build-environment-plugin</url>
     <connection>scm:git:https://github.com/jenkinsci/docker-custom-build-environment-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/docker-custom-build-environment-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>docker-custom-build-environment-1.7.0</tag>
   </scm>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <configuration>
+          <loggers>
+            <org.jenkinsci.plugins.workflow>FINE</org.jenkinsci.plugins.workflow>
+            <org.jenkinsci.plugins.durabletask>FINE</org.jenkinsci.plugins.durabletask>
+          </loggers>
+        </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <properties>
+    <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
+    <findbugs.failOnError>false</findbugs.failOnError>
+  </properties>
 
 </project>
