@@ -33,7 +33,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
             new DockerBuildWrapper(
                 new PullDockerImageSelector("ubuntu:14.04"),
-                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, false, 0)
+                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, false, false, 0)
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 
@@ -47,12 +47,12 @@ public class FunctionalTests {
     @Test
     public void run_inside_built_container() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.setScm(new SingleFileSCM("Dockerfile", IOUtils.toString(getClass().getResourceAsStream("/Dockerfile"), "UTF-8")));
+        project.setScm(new SingleFileSCM("Dockerfile", "FROM ubuntu:14.04"));
 
         project.getBuildWrappersList().add(
                 new DockerBuildWrapper(
-                        new DockerfileImageSelector(".", "$WORKSPACE/Dockerfile"),
-                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, false, 0)
+                        new DockerfileImageSelector(".", "Dockerfile"),
+                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true, false, 0)
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 
@@ -60,6 +60,31 @@ public class FunctionalTests {
         jenkins.assertBuildStatus(Result.SUCCESS, build);
         String s = FileUtils.readFileToString(build.getLogFile());
         assertThat(s, containsString("Ubuntu 14.04"));
+        jenkins.buildAndAssertSuccess(project);
+    }
+
+    @Test
+    public void run_inside_built_python_pip_container() throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        String dockerfile = String.join(
+                                        "\n",
+                                        "FROM python:3.6.4-alpine3.4",
+                                        "RUN echo Successfully built THIS_STRING_SHOULD_NOT_BE_CAPTURED_AS_IMAGE_ID",
+                                        "RUN pip install simplejson==3.13.2"
+        );
+        project.setScm(new SingleFileSCM("Dockerfile", dockerfile));
+
+        project.getBuildWrappersList().add(
+                new DockerBuildWrapper(
+                        new DockerfileImageSelector(".", "Dockerfile"),
+                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true, false, 0)
+        );
+        project.getBuildersList().add(new Shell("python -V"));
+
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        jenkins.assertBuildStatus(Result.SUCCESS, build);
+        String s = FileUtils.readFileToString(build.getLogFile());
+        assertThat(s, containsString("Python 3.6.4"));
         jenkins.buildAndAssertSuccess(project);
     }
 
