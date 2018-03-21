@@ -70,6 +70,12 @@ THE SOFTWARE.
           <f:entry field="cpu" title="CPU shares">
             <f:textbox/>
           </f:entry>
+          <f:optionalBlock field="isLaunchPause" title="${%Pause after container launch}" checked="${instance.pauseAfterContainerLaunch>0}"
+              help="/descriptor/com.cloudbees.jenkins.plugins.docker_build_env.DockerBuildWrapper/help/launch-pause" inline="true">
+            <f:entry title="${%Pause Seconds}">
+              <f:number clazz="number" field="pauseAfterContainerLaunch" min="0" max="30" step="1" />
+            </f:entry>
+          </f:optionalBlock>
         </f:advanced>
 
     </f:nested>
