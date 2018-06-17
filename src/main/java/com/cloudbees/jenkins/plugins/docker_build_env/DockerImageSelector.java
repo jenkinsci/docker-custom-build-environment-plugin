@@ -15,7 +15,7 @@ import java.util.Collection;
  */
 public abstract class DockerImageSelector extends AbstractDescribableImpl<DockerImageSelector> implements ExtensionPoint {
 
-    public abstract String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull) throws IOException, InterruptedException;
+    public abstract String prepareDockerImage(Docker docker, AbstractBuild build, TaskListener listener, boolean forcePull, boolean noCache) throws IOException, InterruptedException;
 
     public abstract Collection<String> getDockerImagesUsedByJob(Job<?, ?> job);
 }
