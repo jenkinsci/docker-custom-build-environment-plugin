@@ -62,13 +62,6 @@ public class Docker implements Closeable {
         this.environmentFilters = getEnvFilters(filterEnvVariables);
     }
 
-    private List<String> getEnvFilters(String envFilters){
-        if(envFilters != null && !envFilters.equals("")) {
-            return Arrays.asList(envFilters.split(","));
-        }
-        return Arrays.asList();
-    }
-
 
     private KeyMaterial dockerEnv;
 
@@ -103,6 +96,13 @@ public class Docker implements Closeable {
             envVars = new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
         }
         return envVars;
+    }
+
+    private List<String> getEnvFilters(String envFilters){
+        if(envFilters != null && !envFilters.equals("")) {
+            return Arrays.asList(envFilters.split(","));
+        }
+        return Arrays.asList();
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
@@ -345,7 +345,7 @@ public class Docker implements Closeable {
             boolean found = false;
             String envV = it.nextLine();
             for(String filter: environmentFilters) {
-                if(envV.contains(filter+"=")) {
+                if(!filter.equals("") && envV.contains(filter + "=")) {
                     found = true;
                     break;
                 }
