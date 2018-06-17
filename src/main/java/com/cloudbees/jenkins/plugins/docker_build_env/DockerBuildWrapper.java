@@ -148,7 +148,7 @@ public class DockerBuildWrapper extends BuildWrapper {
     public String getFilterEnvVariables() {
         return filterEnvVariables;
     }
-
+  
     public boolean isNoCache() {
         return noCache;
     }
