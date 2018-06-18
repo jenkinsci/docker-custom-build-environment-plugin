@@ -70,6 +70,9 @@ THE SOFTWARE.
           <f:entry field="cpu" title="CPU shares">
             <f:textbox/>
           </f:entry>
+          <f:entry field="filterEnvVariables" title="Filter Environment Variables">
+            <f:textbox/>
+          </f:entry>
         </f:advanced>
 
     </f:nested>
