@@ -65,6 +65,8 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
             e.buildEnvVars(environment);
         }
 
+        EnvVars.resolve(environment);
+
         return environment;
     }
 
