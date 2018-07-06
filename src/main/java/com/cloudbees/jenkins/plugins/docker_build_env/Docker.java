@@ -338,7 +338,7 @@ public class Docker implements Closeable {
     }
 
 
-    public void executeIn(String container, String userId, Launcher.ProcStarter starter, EnvVars environment) throws IOException, InterruptedException {
+    public void executeIn(String container, String userId, Launcher.ProcStarter starter, EnvVars environment, Set<String> sensitiveBuildVariables) throws IOException, InterruptedException {
         List<String> prefix = dockerCommandArgs();
         prefix.add("exec");
         prefix.add("--tty");
@@ -347,18 +347,22 @@ public class Docker implements Closeable {
         prefix.add(container);
         prefix.add("env");
 
-        // Build a list of environment, hidding node's one
+        // Create an array of masks to hide sensitive variables
+        boolean[] masks = new boolean[prefix.size() + starter.cmds().size() + environment.entrySet().size()];
+        int maskIndex = prefix.size();
+
+        // Build a list of environment, hiding node's one
         for (Map.Entry<String, String> e : environment.entrySet()) {
+            masks[maskIndex++] = sensitiveBuildVariables.contains(e.getKey());
             prefix.add(e.getKey()+"="+e.getValue());
         }
 
-        starter.cmds().addAll(0, prefix);
         if (starter.masks() != null) {
-            boolean[] masks = new boolean[starter.masks().length + prefix.size()];
             System.arraycopy(starter.masks(), 0, masks, prefix.size(), starter.masks().length);
-            starter.masks(masks);
         }
 
+        starter.cmds().addAll(0, prefix);
+        starter.masks(masks);
         starter.envs(getEnvVars());
     }
 
