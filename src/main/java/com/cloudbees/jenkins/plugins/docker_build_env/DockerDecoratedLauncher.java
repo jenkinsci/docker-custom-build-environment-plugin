@@ -45,7 +45,7 @@ public class DockerDecoratedLauncher extends Launcher.DecoratedLauncher {
 
         try {
             EnvVars environment = buildContainerEnvironment();
-            runInContainer.getDocker().executeIn(runInContainer.container, userId, starter, environment);
+            runInContainer.getDocker().executeIn(runInContainer.container, userId, starter, environment, build.getSensitiveBuildVariables());
         } catch (InterruptedException e) {
             throw new IOException("Caught InterruptedException", e);
         }
