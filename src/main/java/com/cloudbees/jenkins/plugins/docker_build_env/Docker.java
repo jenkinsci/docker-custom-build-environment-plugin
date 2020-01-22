@@ -42,6 +42,7 @@ public class Docker implements Closeable {
     private final TaskListener listener;
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
+    private final String dockerHostName;
     private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
     private final boolean privileged;
@@ -50,6 +51,7 @@ public class Docker implements Closeable {
 
     public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
+        this.dockerHostName = Computer.currentComputer().getHostName();
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
@@ -368,6 +370,10 @@ public class Docker implements Closeable {
         }
 
         starter.envs(getEnvVars());
+    }
+
+    public String getDockerHostName() {
+        return dockerHostName;
     }
 
     private ArgumentListBuilder dockerCommand() {

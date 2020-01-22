@@ -82,6 +82,14 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
         if (enable && container != null) {
             env.put("BUILD_CONTAINER_ID", container);
         }
+
+        if (docker.getDockerHostName() != null) {
+            env.put("BUILD_DOCKER_HOST", docker.getDockerHostName());
+        }
+
+        if (image != null) {
+            env.put("BUILD_DOCKER_IMAGE", image);
+        }
     }
 
     public void bindMount(String path) {
