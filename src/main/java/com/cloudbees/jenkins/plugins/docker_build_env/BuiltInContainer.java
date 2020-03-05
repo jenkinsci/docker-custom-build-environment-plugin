@@ -52,6 +52,16 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
         return image;
     }
 
+    public String getImageName() {
+        if (image == null) {
+            return "";
+        }
+        if (image.indexOf('/') < 0) {
+            return image;
+        }
+        return image.split("/")[1];
+    }
+
     public String getDisplayName() {
         return "built inside docker container";
     }
@@ -83,7 +93,7 @@ public class BuiltInContainer implements BuildBadgeAction, EnvironmentContributi
             env.put("BUILD_CONTAINER_ID", container);
         }
 
-        if (docker.getDockerHostName() != null) {
+        if (docker != null && docker.getDockerHostName() != null) {
             env.put("BUILD_DOCKER_HOST", docker.getDockerHostName());
         }
 
