@@ -216,7 +216,7 @@ public class Docker implements Closeable {
         }
 
         if (StringUtils.isNotBlank(cpu)) {
-            args.add("--cpu-shares", cpu);
+            args.add("--cpus", cpu);
         }
 
         if (!"host".equals(net)){
