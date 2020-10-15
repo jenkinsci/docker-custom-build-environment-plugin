@@ -25,7 +25,7 @@ CloudBees Docker Custom Build Environment Plugin can be used from any job type, 
 
 You can :
 
-- Select the Docker image to run the build as a **Docker image** to be pulled. This is comparable to the [docker-plugin](https://wiki.jenkins.io/display/JENKINS/Docker+Plugin) approach to offer docker agents within Jenkins, but without any prerequisites on the Docker image nor need for Administrator privileges to configure the adequate agent template.
+- Select the Docker image to run the build as a **Docker image** to be pulled. This is comparable to the [docker-plugin](https://plugins.jenkins.io/docker-plugin/) approach to offer docker agents within Jenkins, but without any prerequisites on the Docker image nor need for Administrator privileges to configure the adequate agent template.
 
 - Configure the plugin to build a container image **from a  Dockerfile** stored in project repository. With this setup, you get both the project source code and build environment defined in SCM. This is my preferred way to use this plugin.
 
@@ -33,7 +33,7 @@ SCM checkout will run within a classic Jenkins agent execution context - this is
 
 ### Using Docker image
 
-CloudBees Docker Custom Build Environment let you use arbitrary docker image to host the build. You can use such an image you build on your own (or using [CloudBees Docker Build and Publish](https://wiki.jenkins.io/display/JENKINS/Docker+build+publish+Plugin) plugin) to define the set of prerequisites for your project and share with the development team, as well as reuse for your CI job. In
+CloudBees Docker Custom Build Environment let you use arbitrary docker image to host the build. You can use such an image you build on your own (or using [CloudBees Docker Build and Publish](https://plugins.jenkins.io/docker-build-publish/) plugin) to define the set of prerequisites for your project and share with the development team, as well as reuse for your CI job. In
 following sample, maven+jdk8 image available on DockerHub is used as a reference environment to host a maven build.
 
 ![Environments to Build](docs/images/Capture_d’écran_2015-06-25_à_18.07.49.png)
@@ -46,7 +46,7 @@ As for Docker images, there's no requirement on the Dockerfile you're using.
 
 ## Advanced options
 
-CloudBees Docker Custom Build Environment integrates with [Docker-commons](https://wiki.jenkins.io/display/JENKINS/Docker+Commons+Plugin) plugin so you can define the docker cli executable to be used to interact with Docker daemon, as well as select TLS credentials to be used to access a secured infrastructure (which is highly recommended)
+CloudBees Docker Custom Build Environment integrates with [Docker-commons](https://plugins.jenkins.io/docker-commons/) plugin so you can define the docker cli executable to be used to interact with Docker daemon, as well as select TLS credentials to be used to access a secured infrastructure (which is highly recommended)
 
 ![Advanced Options](docs/images/Capture_d’écran_2015-08-11_à_14.28.31.png)
 
@@ -127,7 +127,7 @@ The docker container is ran after SCM has been checked-out into a agent workspac
 
 ### Comparison
 
-Compared to [docker plugin](https://wiki.jenkins.io/display/JENKINS/Docker+Plugin),
+Compared to [docker plugin](https://plugins.jenkins.io/docker-plugin/),
 
 - This plugin can use arbitrary docker images, there is NO prerequisite to get a specific user set, ssh daemon, or even JDK available in docker container you use for the build - no need for CI-specific docker image, can use the exact same docker image you use on developer workstation to run/test your project.
 
