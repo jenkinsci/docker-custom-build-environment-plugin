@@ -40,7 +40,7 @@ following sample, maven+jdk8 image available on DockerHub is used as a reference
 
 ### Using a Dockerfile
 
-You also can have a Dockerfile and context stored in your project SCM aside your source code, so team can maintain them together and/or use distinct Dockerfile per branch. If you use this option, CloudBees Docker Custom Build Environment will build the image on first build and then will compare your Dockerfile with the one used on previous build to check a rebuild is necessary.
+You also can have a Dockerfile and context stored in your project SCM aside your source code, so team can maintain them together and/or use distinct Dockerfile per branch. If you use this option, Docker Custom Build Environment Plugin will build the image on first build and then will compare your Dockerfile with the one used on previous build to check a rebuild is necessary.
 
 As for Docker images, there's no requirement on the Dockerfile you're using.
 
