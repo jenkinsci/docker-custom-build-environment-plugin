@@ -46,7 +46,7 @@ As for Docker images, there's no requirement on the Dockerfile you're using.
 
 ## Advanced options
 
-CloudBees Docker Custom Build Environment integrates with [Docker-commons](https://plugins.jenkins.io/docker-commons/) plugin so you can define the docker cli executable to be used to interact with Docker daemon, as well as select TLS credentials to be used to access a secured infrastructure (which is highly recommended)
+Docker Custom Build Environment plugin integrates with [Docker-commons](https://plugins.jenkins.io/docker-commons/) plugin so you can define the docker cli executable to be used to interact with Docker daemon, as well as select TLS credentials to be used to access a secured infrastructure (which is highly recommended)
 
 ![Advanced Options](docs/images/Capture_d’écran_2015-08-11_à_14.28.31.png)
 
