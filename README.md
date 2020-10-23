@@ -21,7 +21,7 @@ Docker Custom Build Environment Plugin has been designed to make Docker Images /
 
 ## User Guide
 
-CloudBees Docker Custom Build Environment Plugin can be used from any job type, it appears in the "build environment" section and let you configure your build to run inside a Docker container.
+Docker Custom Build Environment Plugin can be used from any job type, it appears in the "build environment" section and let you configure your build to run inside a Docker container.
 
 You can :
 
