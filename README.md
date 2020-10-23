@@ -17,7 +17,7 @@ setup are:
 
 Docker is a great way to bootstrap reproducible and isolated environments. Compared to a virtual machine, it's faster to launch and lighter to use. Another benefit is the Docker image can be defined both as a binary image pulled from repository, or as a plain text Dockerfile you can store in SCM along side the project source code, so that the source and environment are always in sync and recorded.
 
-CloudBees Docker Custom Build Environment Plugin has been designed to make Docker Images / [Dockerfile](https://docs.docker.com/reference/builder/) a first class citizen in a continuous delivery setup, which allows the simplest way for a development team to manage the exact bits of the build environment whilst the infrastructure team only has to focus on available resources hosting arbitrary docker containers.
+Docker Custom Build Environment Plugin has been designed to make Docker Images / [Dockerfile](https://docs.docker.com/reference/builder/) a first class citizen in a continuous delivery setup, which allows the simplest way for a development team to manage the exact bits of the build environment whilst the infrastructure team only has to focus on available resources hosting arbitrary docker containers.
 
 ## User Guide
 
