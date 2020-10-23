@@ -135,4 +135,4 @@ Compared to [docker plugin](https://plugins.jenkins.io/docker-plugin/),
 
 - The user doesn't need Administrator privileges to setup a docker-agent template, you just need to commit a Dockerfile to your source repository.
 
-- Docker-plugin abuses the Jenkins Cloud API. _i.e. you have to define a fixed IP address and can't benefit from a Cloud agent provider, or a pool of generic agents._ CloudBees Docker Custom Build Environment only relies on agents which have docker installed, and Jenkins will provision/pick-up available ones using all available agents provider plugins.
+- Docker-plugin abuses the Jenkins Cloud API. _i.e. you have to define a fixed IP address and can't benefit from a Cloud agent provider, or a pool of generic agents._ Docker Custom Build Environment Plugin only relies on agents which have docker installed, and Jenkins will provision/pick-up available ones using all available agents provider plugins.
