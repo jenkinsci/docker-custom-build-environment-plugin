@@ -33,7 +33,7 @@ SCM checkout will run within a classic Jenkins agent execution context - this is
 
 ### Using Docker image
 
-CloudBees Docker Custom Build Environment let you use arbitrary docker image to host the build. You can use such an image you build on your own (or using [CloudBees Docker Build and Publish](https://plugins.jenkins.io/docker-build-publish/) plugin) to define the set of prerequisites for your project and share with the development team, as well as reuse for your CI job. In
+Docker Custom Build Environment let you use arbitrary docker image to host the build. You can use such an image you build on your own (or using [CloudBees Docker Build and Publish](https://plugins.jenkins.io/docker-build-publish/) plugin) to define the set of prerequisites for your project and share with the development team, as well as reuse for your CI job. In
 following sample, maven+jdk8 image available on DockerHub is used as a reference environment to host a maven build.
 
 ![Environments to Build](docs/images/Capture_d’écran_2015-06-25_à_18.07.49.png)
