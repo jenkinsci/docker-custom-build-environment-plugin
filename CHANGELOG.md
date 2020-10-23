@@ -30,7 +30,7 @@ Changelog
 
 - support maven job type
 - expose dockerhost IP as "dockerhost" in /etc/host 
-- configure container with a subset of build environment, as slave node environment doesn't make sense inside container.
+- configure container with a subset of build environment, as node environment doesn't make sense inside container.
 
 ### 1.5
 
