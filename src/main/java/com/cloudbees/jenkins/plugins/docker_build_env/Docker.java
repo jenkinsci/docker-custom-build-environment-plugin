@@ -125,7 +125,9 @@ public class Docker implements Closeable {
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
 
-        args.add("--label", "jenkins-project=" + this.build.getProject().getName());
+        String projectName = this.build.getProject().getName();
+        projectName = projectName.replaceAll("[^a-zA-Z0-9_.-]", "__");
+        args.add("--label", "jenkins-project=" + projectName);
         args.add("--label", "jenkins-build-number=" + this.build.getNumber());
 
         OutputStream logOutputStream = listener.getLogger();
@@ -189,11 +191,12 @@ public class Docker implements Closeable {
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String extraArgs, String... command) throws IOException, InterruptedException {
 
         String docker0 = getDocker0Ip(launcher, image);
-
+        String projectName = this.build.getProject().getName();
+        projectName = projectName.replaceAll("[^a-zA-Z0-9_.-]", "__");
 
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
-        args.add("--name", this.build.getProject().getName() + "-" + this.build.getNumber());
+        args.add("--name", projectName + "-" + this.build.getNumber());
 
         if (privileged) {
             args.add("--privileged");
