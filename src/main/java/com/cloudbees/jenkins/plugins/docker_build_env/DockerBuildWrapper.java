@@ -73,13 +73,14 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private String extraArgs;
     private final boolean noCache;
 
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu, boolean noCache) {
+                              String net, String memory, String cpu, String extraArgs, boolean noCache) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -93,6 +94,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.net = net;
         this.memory = memory;
         this.cpu = cpu;
+        this.extraArgs = extraArgs;
         this.noCache = noCache;
     }
 
@@ -141,6 +143,8 @@ public class DockerBuildWrapper extends BuildWrapper {
     public String getMemory() { return memory;}
 
     public String getCpu() { return cpu;}
+    
+    public String getExtraArgs() { return extraArgs; }
 
     public boolean isNoCache() {
         return noCache;
@@ -219,6 +223,7 @@ public class DockerBuildWrapper extends BuildWrapper {
             return runInContainer.getDocker().runDetached(runInContainer.image, workdir,
                     runInContainer.getVolumes(build), runInContainer.getPortsMap(), links,
                     environment, build.getSensitiveBuildVariables(), net, memory, cpu,
+		            extraArgs,
                     command); // Command expected to hung until killed
 
         } catch (InterruptedException e) {
