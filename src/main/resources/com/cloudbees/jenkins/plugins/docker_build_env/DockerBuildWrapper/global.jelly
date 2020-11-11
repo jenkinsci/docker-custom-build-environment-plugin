@@ -24,7 +24,7 @@ THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:d="/lib/docker/commons" xmlns:c="/lib/credentials">
-      <f:section title="Build In Docker Configuration" name="buildInDocker">
+      <f:section title="Build In Docker Configuration">
           <f:entry field="initImage" title="Init image">
             <f:textbox default="alpine:3.6"/>
           </f:entry>

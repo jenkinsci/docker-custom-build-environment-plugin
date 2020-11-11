@@ -7,6 +7,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -18,6 +19,7 @@ import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
@@ -30,6 +32,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.servlet.ServletException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -270,14 +273,25 @@ public class DockerBuildWrapper extends BuildWrapper {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-            json = json.getJSONObject("buildInDocker");
-            initImage = json.getString("initImage");
+            req.bindParameters(this);
+            String paramValue = json.getString("initImage");
+            this.initImage = !paramValue.trim().isEmpty() ? paramValue : "alpine:3.6";
             save();
             return super.configure(req,json);
         }
 
         public String getInitImage() {
             return initImage;
+        }
+
+        public void setInitImage(String initImage) {
+            this.initImage = initImage;
+        }
+
+        public FormValidation doCheckInitImage(@QueryParameter String initImage) throws IOException, ServletException {
+            if (Util.fixEmptyAndTrim(initImage) == null)
+                return FormValidation.error("Please set a Init Image name. Default: alpine:3.6");
+            return FormValidation.ok();
         }
 
         @Override

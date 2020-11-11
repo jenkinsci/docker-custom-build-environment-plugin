@@ -265,7 +265,7 @@ public class Docker implements Closeable {
                 .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/bin/true")
-                .add("alpine:3.6");
+                .add(initImage);
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -296,7 +296,7 @@ public class Docker implements Closeable {
                 .add("run", "--tty", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
-                .add("alpine:3.6")
+                .add(initImage)
                 .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
