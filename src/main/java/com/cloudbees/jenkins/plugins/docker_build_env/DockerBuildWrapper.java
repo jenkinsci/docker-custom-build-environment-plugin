@@ -22,11 +22,13 @@ import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -258,6 +260,25 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     @Extension
     public static class DescriptorImpl extends BuildWrapperDescriptor {
+
+        private String initImage;
+
+        public DescriptorImpl(){
+            super(DockerBuildWrapper.class);
+            load();
+        }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            json = json.getJSONObject("buildInDocker");
+            initImage = json.getString("initImage");
+            save();
+            return super.configure(req,json);
+        }
+
+        public String getInitImage() {
+            return initImage;
+        }
 
         @Override
         public String getDisplayName() {
