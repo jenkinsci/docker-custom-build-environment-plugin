@@ -191,7 +191,7 @@ public class Docker implements Closeable {
 
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
-        args.add("--name", this.build.getProject().getName() + "-" + this.build.getNumber());
+        args.add("--name", this.build.getProject().getName().replaceAll("[^a-zA-Z0-9_.-]", "_") + "-" + this.build.getNumber());
 
         if (privileged) {
             args.add( "--privileged");
