@@ -45,6 +45,24 @@ public class FunctionalTests {
     }
 
     @Test
+    public void test_cpus() throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+
+        project.getBuildWrappersList().add(
+            new DockerBuildWrapper(
+                new PullDockerImageSelector("alpine:3.16"),
+                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, "1", false)
+        );
+        project.getBuildersList().add(new Shell("echo \"nproc==$(nproc)xxx\""));
+
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        jenkins.assertBuildStatus(Result.SUCCESS, build);
+        String s = FileUtils.readFileToString(build.getLogFile());
+        assertThat(s, containsString("nproc==1xxx"));
+        jenkins.buildAndAssertSuccess(project);
+    }
+
+    @Test
     public void run_inside_built_container() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.setScm(new SingleFileSCM("Dockerfile", "FROM ubuntu:14.04"));

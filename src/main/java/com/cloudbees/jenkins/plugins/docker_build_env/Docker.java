@@ -28,9 +28,13 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -38,6 +42,8 @@ import java.util.regex.Pattern;
 public class Docker implements Closeable {
 
     private static boolean debug = Boolean.getBoolean(Docker.class.getName()+".debug");
+    private static final Random CPU_RANDOMIZER = new Random();
+
     private final Launcher launcher;
     private final TaskListener listener;
     private final String dockerExecutable;
@@ -216,7 +222,8 @@ public class Docker implements Closeable {
         }
 
         if (StringUtils.isNotBlank(cpu)) {
-            args.add("--cpus", cpu);
+            int cpuCount = Integer.parseInt(cpu);
+            addCpuParams(args, cpuCount);
         }
 
         if (!"host".equals(net)){
@@ -250,6 +257,64 @@ public class Docker implements Closeable {
         return container;
     }
 
+
+    private void addCpuParams(ArgumentListBuilder args, int cpuCount) throws IOException, InterruptedException {
+        if (cpuCount < 1) {
+            return;
+        }
+        int availableProcessors = getAvailableProcessors();
+        listener.getLogger().println("availableProcessors on the slave machine: " + availableProcessors);
+        int maxCpus = Math.min(availableProcessors, cpuCount);
+        args.add("--cpus", Integer.toString(cpuCount));
+        if (maxCpus < availableProcessors && isCpusetNeeded()) {
+            SortedSet<Integer> cpuSet = new TreeSet<>();
+            while (cpuSet.size() < maxCpus) {
+                cpuSet.add(CPU_RANDOMIZER.nextInt(availableProcessors));
+            }
+            String cpuSetString = cpuSet.stream().map(i -> i.toString()).collect(Collectors.joining(","));
+            listener.getLogger().println("Assigning the following random CPUs (--cpuset-cpus=) " + cpuSetString);
+            args.add("--cpuset-cpus", cpuSetString);
+        }
+    }
+
+    private int getAvailableProcessors() throws IOException, InterruptedException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int status = launcher.launch().envs(getEnvVars()).cmds("nproc").stdout(out).quiet(!verbose).stderr(listener.getLogger())
+                .join();
+        if (status != 0) {
+            throw new RuntimeException("Failed to run the nproc");
+        }
+
+        int nproc = Integer.parseInt(out.toString("UTF-8").trim());
+        return nproc;
+    }
+
+
+    private boolean isCpusetNeeded() throws IOException, InterruptedException {
+        ArgumentListBuilder args = dockerCommand()
+                .add("run", "--rm")
+                .add("--entrypoint")
+                .add("/usr/bin/nproc")
+                .add("--cpus")
+                .add("1")
+                .add("alpine:3.16");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int status = launcher.launch()
+                .envs(getEnvVars())
+                .cmds(args)
+                .stdout(out).quiet(!verbose).stderr(listener.getLogger()).join();
+
+        if (status != 0) {
+            throw new RuntimeException("Failed to run docker CPU count check");
+        }
+
+        int nproc = Integer.parseInt(out.toString("UTF-8").trim());
+        listener.getLogger().println("Checking 1 CPU limit. Number of procs with --cpus 1 (without --cpuset-cpus argument) visible in Docker " + nproc);
+        return nproc > 1;
+    }
+
+
     private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
 
         // On some distributions, docker doesn't start docker0 bridge until a container do require it
@@ -259,7 +324,7 @@ public class Docker implements Closeable {
                 .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/bin/true")
-                .add("alpine:3.6");
+                .add("alpine:3.16");
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -290,7 +355,7 @@ public class Docker implements Closeable {
                 .add("run", "--tty", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
-                .add("alpine:3.6")
+                .add("alpine:3.16")
                 .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
