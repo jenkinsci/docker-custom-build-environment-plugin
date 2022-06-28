@@ -196,15 +196,8 @@ public class DockerBuildWrapper extends BuildWrapper {
         // We are all set, DockerDecoratedLauncher now can wrap launcher commands with docker-exec
         runInContainer.enable();
 
-        return new Environment() {
-            @Override
-            public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                return build.getAction(BuiltInContainer.class).tearDown();
-            }
-        };
+        return new ContainerCleanupEnvironment();
     }
-
-
 
     private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
         try {
@@ -289,13 +282,7 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     }
 
-    private static Callable<String, IOException> GetTmpdir = new MasterToSlaveCallable<String, IOException>() {
-        @Override
-        public String call() {
-            return System.getProperty("java.io.tmpdir");
-        }
-    };
-
+    private static Callable<String, IOException> GetTmpdir = new GetTmpDirCallable();
 
     private static final Logger LOGGER = Logger.getLogger(DockerBuildWrapper.class.getName());
 
@@ -310,5 +297,19 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
         if (command == null) command = "/bin/cat";
         return this;
+    }
+
+    class ContainerCleanupEnvironment extends Environment {
+        @Override
+        public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+            return build.getAction(BuiltInContainer.class).tearDown();
+        }
+    }
+
+    static class GetTmpDirCallable extends MasterToSlaveCallable<String, IOException> {
+        @Override
+        public String call() {
+            return System.getProperty("java.io.tmpdir");
+        }
     }
 }
