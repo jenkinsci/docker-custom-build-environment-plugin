@@ -395,9 +395,10 @@ public class Docker implements Closeable {
         }
 
         EnvVars env = new EnvVars();
-        LineIterator it = new LineIterator(new StringReader(out.toString()));
-        while (it.hasNext()) {
-            env.addLine(it.nextLine());
+        try (LineIterator it = new LineIterator(new StringReader(out.toString("UTF-8")))) {
+            while (it.hasNext()) {
+                env.addLine(it.nextLine());
+            }
         }
         return env;
     }
@@ -418,9 +419,10 @@ public class Docker implements Closeable {
         }
 
         starter.cmds().addAll(0, prefix);
-        if (starter.masks() != null) {
-            boolean[] masks = new boolean[starter.masks().length + prefix.size()];
-            System.arraycopy(starter.masks(), 0, masks, prefix.size(), starter.masks().length);
+        boolean[] tmpMasks = starter.masks();
+        if (tmpMasks != null) {
+            boolean[] masks = new boolean[tmpMasks.length + prefix.size()];
+            System.arraycopy(tmpMasks, 0, masks, prefix.size(), tmpMasks.length);
             starter.masks(masks);
         }
 

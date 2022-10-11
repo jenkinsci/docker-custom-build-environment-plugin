@@ -237,13 +237,13 @@ public class DockerBuildWrapper extends BuildWrapper {
     private String whoAmI(Launcher launcher) throws IOException, InterruptedException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         launcher.launch().cmds("id", "-u").stdout(bos).quiet(true).join();
-        String uid = bos.toString().trim();
+        String uid = bos.toString("UTF-8").trim();
 
         String gid = group;
         if (isEmpty(group)) {
             ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
             launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
-            gid = bos2.toString().trim();
+            gid = bos2.toString("UTF-8").trim();
         }
         return uid+":"+gid;
 

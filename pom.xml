@@ -1,111 +1,104 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>3.49</version>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>4.41</version>
+    </parent>
 
-  <groupId>com.cloudbees.jenkins.plugins</groupId>
-  <artifactId>docker-custom-build-environment</artifactId>
-  <name>Docker Custom Build Environment Plugin</name>
-  <version>1.7.4-SNAPSHOT</version>
-  <packaging>hpi</packaging>
-  <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
+    <groupId>com.cloudbees.jenkins.plugins</groupId>
+    <artifactId>docker-custom-build-environment</artifactId>
+    <name>Docker Custom Build Environment Plugin</name>
+    <version>1.7.4-SNAPSHOT</version>
+    <packaging>hpi</packaging>
+    <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
-  <licenses>
-    <license>
-      <name>MIT</name>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>MIT</name>
+        </license>
+    </licenses>
 
-  <developers>
-      <developer>
-          <email>jon.hermansen@gmail.com</email>
-          <id>jonhermansen</id>
-          <name>Jon Hermansen</name>
-          <organization>Jon Hermansen</organization>
-          <timezone>UTC-5</timezone>
-      </developer>
-  </developers>
+    <developers>
+        <developer>
+            <email>jon.hermansen@gmail.com</email>
+            <id>jonhermansen</id>
+            <name>Jon Hermansen</name>
+            <organization>Jon Hermansen</organization>
+            <timezone>UTC-5</timezone>
+        </developer>
+    </developers>
 
-  <dependencies>
-      <dependency>
-          <groupId>org.jenkins-ci.plugins</groupId>
-          <artifactId>docker-commons</artifactId>
-          <version>1.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.jenkins-ci.main</groupId>
-          <artifactId>maven-plugin</artifactId>
-          <version>2.12</version>
-          <optional>true</optional>
-      </dependency>
-      <dependency>
-          <groupId>org.jenkins-ci.plugins</groupId>
-          <artifactId>dockerhub-notification</artifactId>
-          <version>1.0</version>
-          <optional>true</optional>
-      </dependency>
-  </dependencies>
+    <properties>
+        <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
+        <findbugs.failOnError>false</findbugs.failOnError>
+        <java.level>8</java.level>
+        <jenkins.version>2.263.1</jenkins.version>
+    </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-2.263.x</artifactId>
+                <version>984.vb5eaac999a7e</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>docker-commons</artifactId>
+            <version>1.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.main</groupId>
+            <artifactId>maven-plugin</artifactId>
+            <version>2.12</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>dockerhub-notification</artifactId>
+            <version>1.0</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 
-    <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
+    <scm>
+        <url>https://github.com/jenkinsci/docker-custom-build-environment-plugin</url>
+        <connection>scm:git:https://github.com/jenkinsci/docker-custom-build-environment-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/docker-custom-build-environment-plugin.git</developerConnection>
+        <tag>docker-custom-build-environment-1.7.0</tag>
+    </scm>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.7.2.1</version>
+                <configuration>
+                    <failThreshold>High</failThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-  <scm>
-    <url>https://github.com/jenkinsci/docker-custom-build-environment-plugin</url>
-    <connection>scm:git:https://github.com/jenkinsci/docker-custom-build-environment-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/docker-custom-build-environment-plugin.git</developerConnection>
-    <tag>docker-custom-build-environment-1.7.0</tag>
-  </scm>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.jenkins-ci.tools</groupId>
-        <artifactId>maven-hpi-plugin</artifactId>
-        <configuration>
-          <loggers>
-            <org.jenkinsci.plugins.workflow>FINE</org.jenkinsci.plugins.workflow>
-            <org.jenkinsci.plugins.durabletask>FINE</org.jenkinsci.plugins.durabletask>
-          </loggers>
-        </configuration>
-      </plugin>
-      <!-- TODO: FIX THIS-->
-      <plugin>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <configuration>
-            <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
-        <configuration>
-            <skip>true</skip>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
-  <properties>
-    <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
-    <findbugs.failOnError>false</findbugs.failOnError>
-    <java.level>8</java.level>
-  </properties>
-
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>

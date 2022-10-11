@@ -8,7 +8,6 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
