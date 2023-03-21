@@ -126,24 +126,32 @@ public class Docker implements Closeable {
         args.add("--label", "jenkins-project=" + this.build.getProject().getName());
         args.add("--label", "jenkins-build-number=" + this.build.getNumber());
 
-        OutputStream logOutputStream = listener.getLogger();
-        OutputStream err = listener.getLogger();
-
         ByteArrayOutputStream resultOutputStream = new ByteArrayOutputStream();
-        TeeOutputStream teeOutputStream = new TeeOutputStream(logOutputStream, resultOutputStream);
+        ByteArrayOutputStream resultErrorStream = new ByteArrayOutputStream();
+        TeeOutputStream teeOutputStream = new TeeOutputStream(listener.getLogger(), resultOutputStream);
+        TeeOutputStream teeErrorStream = new TeeOutputStream(listener.getLogger(), resultErrorStream);
 
         int status = launcher.launch()
                 .envs(getEnvVars())
                 .cmds(args)
-                .stdout(teeOutputStream).stderr(err).join();
+                .stdout(teeOutputStream).stderr(teeErrorStream).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");
         }
 
-        Pattern pattern = Pattern.compile("Successfully built (.*)");
-        Matcher matcher = pattern.matcher(resultOutputStream.toString("UTF-8"));
-        if (!matcher.find())
-        {
+        String resultOut = resultOutputStream.toString("UTF-8");
+        String resultErr = resultErrorStream.toString("UTF-8");
+        Pattern pattern;
+        String dockerout;
+        if (resultOut.length() > resultErr.length()) {
+            pattern = Pattern.compile("Successfully built (.*)");
+            dockerout = resultOut;
+        } else {
+            pattern = Pattern.compile("writing image sha256:([a-zA-Z0-9]*) .*done");
+            dockerout = resultErr;
+        }
+        Matcher matcher = pattern.matcher(dockerout);
+        if (!matcher.find()) {
             throw new RuntimeException("Failed to lookup the docker build ImageID.");
         }
 
@@ -154,8 +162,9 @@ public class Docker implements Closeable {
         } while (matcher.find());
 
         if (imageId.equals("")) {
-            throw new RuntimeException("Failed to lookup the docker build ImageID.");
+            throw new RuntimeException("Failed to lookup the docker build ImageID. ID cannot be empty.");
         }
+        listener.getLogger().println("ID of built image: \"" + imageId + "\"");
         return imageId;
     }
 
