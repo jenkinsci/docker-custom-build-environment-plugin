@@ -7,6 +7,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -18,6 +19,7 @@ import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
@@ -110,9 +112,11 @@ public class Docker implements Closeable {
 
 
     public String buildImage(FilePath workspace, String dockerfile, boolean forcePull, boolean noCache) throws IOException, InterruptedException {
+        File tempImageIdFile = File.createTempFile("dcbep-", ".iid");
 
         ArgumentListBuilder args = dockerCommand()
-            .add("build");
+            .add("build")
+            .add("--iidfile", tempImageIdFile.getPath());
 
         if (forcePull)
             args.add("--pull");
@@ -126,36 +130,24 @@ public class Docker implements Closeable {
         args.add("--label", "jenkins-project=" + this.build.getProject().getName());
         args.add("--label", "jenkins-build-number=" + this.build.getNumber());
 
-        OutputStream logOutputStream = listener.getLogger();
+        OutputStream out = listener.getLogger();
         OutputStream err = listener.getLogger();
-
-        ByteArrayOutputStream resultOutputStream = new ByteArrayOutputStream();
-        TeeOutputStream teeOutputStream = new TeeOutputStream(logOutputStream, resultOutputStream);
-
         int status = launcher.launch()
-                .envs(getEnvVars())
-                .cmds(args)
-                .stdout(teeOutputStream).stderr(err).join();
+            .envs(getEnvVars())
+            .cmds(args)
+            .stdout(out).stderr(err).join();
         if (status != 0) {
             throw new RuntimeException("Failed to build docker image from project Dockerfile");
         }
 
-        Pattern pattern = Pattern.compile("Successfully built (.*)");
-        Matcher matcher = pattern.matcher(resultOutputStream.toString("UTF-8"));
-        if (!matcher.find())
-        {
-            throw new RuntimeException("Failed to lookup the docker build ImageID.");
-        }
-
-        // find the last occurrence of "Successfully built"
-        String imageId;
-        do {
-            imageId = matcher.group(matcher.groupCount());
-        } while (matcher.find());
-
+        String imageId = FileUtils.readFileToString(tempImageIdFile, "UTF-8");
         if (imageId.equals("")) {
-            throw new RuntimeException("Failed to lookup the docker build ImageID.");
+            throw new RuntimeException("Failed to lookup the docker build ImageID. ID cannot be empty.");
         }
+
+        listener.getLogger().println("ID of built image: \"" + imageId + "\"");
+        tempImageIdFile.delete();
+
         return imageId;
     }
 
