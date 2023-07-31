@@ -184,7 +184,11 @@ public class Docker implements Closeable {
         if (privileged) {
             args.add( "--privileged");
         }
-        args.add("--workdir", workdir);
+
+        if(workdir != null) {
+            args.add("--workdir", workdir);
+        }
+
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("--volume", volume.getKey() + ":" + volume.getValue() + ":rw" );
         }

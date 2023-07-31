@@ -5,7 +5,6 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.Shell;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
             new DockerBuildWrapper(
                 new PullDockerImageSelector("ubuntu:14.04"),
-                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, false)
+                "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, false, true)
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 
@@ -52,7 +51,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
                 new DockerBuildWrapper(
                         new DockerfileImageSelector(".", "Dockerfile"),
-                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true)
+                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true, true)
         );
         project.getBuildersList().add(new Shell("lsb_release  -a"));
 
@@ -77,7 +76,7 @@ public class FunctionalTests {
         project.getBuildWrappersList().add(
                 new DockerBuildWrapper(
                         new DockerfileImageSelector(".", "Dockerfile"),
-                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true)
+                        "", new DockerServerEndpoint("", ""), "", true, false, Collections.<Volume>emptyList(), null, "cat", false, "bridge", null, null, true, true)
         );
         project.getBuildersList().add(new Shell("python -V"));
 
