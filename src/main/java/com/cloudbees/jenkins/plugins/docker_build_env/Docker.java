@@ -294,6 +294,11 @@ public class Docker implements Closeable {
 
         String route = out.toString("UTF-8").trim();
 
+        // ensures that the the default IP exists so that the return is not null
+        if (!route.contains("default")) {
+            throw new RuntimeException("Default IP does not exist");
+        }
+
         // equivalent to `awk '/default/ { print $3 }'` but we can't assume awk is available
         String dockerhost = route.substring(route.indexOf("default")) .split(" ")[2];
         return dockerhost;
