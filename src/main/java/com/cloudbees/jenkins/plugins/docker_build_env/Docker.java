@@ -174,8 +174,7 @@ public class Docker implements Closeable {
 
     public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String... command) throws IOException, InterruptedException {
 
-        String docker0 = getDocker0Ip(launcher, image);
-
+        String jenkinsHost = getJenkinsHost(launcher, image);
 
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
@@ -209,7 +208,7 @@ public class Docker implements Closeable {
 
         if (!"host".equals(net)){
             //--add-host and --net=host are incompatible
-            args.add("--add-host", "dockerhost:"+docker0);
+            args.add("--add-host", "jenkinshost:"+jenkinsHost);
         }
 
         for (Map.Entry<String, String> e : environment.entrySet()) {
@@ -238,7 +237,14 @@ public class Docker implements Closeable {
         return container;
     }
 
-    private String getDocker0Ip(Launcher launcher, String image) throws IOException, InterruptedException {
+    // define the hostname that is to be used to contact jenkins from the build container.
+    private String getJenkinsHost(Launcher launcher, String image) throws IOException, InterruptedException {
+
+        // To support arbitrary networking environments, it can be defined externally.
+        String envVar = System.getenv("CUSTOM_BUILD_ENV_JENKINS_HOST");
+        if (envVar != null){
+            return envVar;
+        }
 
         // On some distributions, docker doesn't start docker0 bridge until a container do require it
         // So let's run the container once, running /bin/true so it terminates immediately
@@ -295,8 +301,8 @@ public class Docker implements Closeable {
         String route = out.toString("UTF-8").trim();
 
         // equivalent to `awk '/default/ { print $3 }'` but we can't assume awk is available
-        String dockerhost = route.substring(route.indexOf("default")) .split(" ")[2];
-        return dockerhost;
+        String jenkinsHost = route.substring(route.indexOf("default")) .split(" ")[2];
+        return jenkinsHost;
     }
 
 
