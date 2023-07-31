@@ -39,6 +39,7 @@ public class Docker implements Closeable {
     private final TaskListener listener;
     private final String dockerExecutable;
     private final DockerServerEndpoint dockerHost;
+    private final String dockerHostName;
     private final DockerRegistryEndpoint registryEndpoint;
     private final boolean verbose;
     private final boolean privileged;
@@ -47,6 +48,7 @@ public class Docker implements Closeable {
 
     public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
+        this.dockerHostName = Computer.currentComputer().getHostName();
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
         this.launcher = launcher;
@@ -122,7 +124,9 @@ public class Docker implements Closeable {
         args.add("--file", dockerfile)
             .add(workspace.getRemote());
 
-        args.add("--label", "jenkins-project=" + this.build.getProject().getName());
+        String projectName = this.build.getProject().getName();
+        projectName = projectName.replaceAll("[^a-zA-Z0-9_.-]", "__");
+        args.add("--label", "jenkins-project=" + projectName);
         args.add("--label", "jenkins-build-number=" + this.build.getNumber());
 
         OutputStream out = listener.getLogger();
@@ -172,17 +176,18 @@ public class Docker implements Closeable {
             listener.getLogger().println("Failed to remove docker container "+container);
     }
 
-    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String... command) throws IOException, InterruptedException {
+    public String runDetached(String image, String workdir, Map<String, String> volumes, Map<Integer, Integer> ports, Map<String, String> links, EnvVars environment, Set sensitiveBuildVariables, String net, String memory, String cpu, String extraArgs, String... command) throws IOException, InterruptedException {
 
         String docker0 = getDocker0Ip(launcher, image);
-
+        String projectName = this.build.getProject().getName();
+        projectName = projectName.replaceAll("[^a-zA-Z0-9_.-]", "__");
 
         ArgumentListBuilder args = dockerCommand()
             .add("run", "--tty", "--detach");
-        args.add("--name", this.build.getProject().getName() + "-" + this.build.getNumber());
+        args.add("--name", projectName + "-" + this.build.getNumber());
 
         if (privileged) {
-            args.add( "--privileged");
+            args.add("--privileged");
         }
         args.add("--workdir", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
@@ -205,6 +210,14 @@ public class Docker implements Closeable {
 
         if (StringUtils.isNotBlank(cpu)) {
             args.add("--cpu-shares", cpu);
+        }
+
+        if (StringUtils.isNotBlank(extraArgs)) {
+            String[] splittedArgs = extraArgs.split("\\s+");
+
+            for (String aSplited : splittedArgs) {
+                args.add(aSplited);
+            }
         }
 
         if (!"host".equals(net)){
@@ -348,6 +361,10 @@ public class Docker implements Closeable {
         }
 
         starter.envs(getEnvVars());
+    }
+
+    public String getDockerHostName() {
+        return dockerHostName;
     }
 
     private ArgumentListBuilder dockerCommand() {

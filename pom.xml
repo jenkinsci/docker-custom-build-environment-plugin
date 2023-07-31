@@ -9,7 +9,7 @@
   <groupId>com.cloudbees.jenkins.plugins</groupId>
   <artifactId>docker-custom-build-environment</artifactId>
   <name>Docker Custom Build Environment Plugin</name>
-  <version>1.7.4-SNAPSHOT</version>
+  <version>1.7.5-jeznach</version>
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins.io/display/JENKINS/Docker+Custom+Build+Environment+Plugin</url>
 
