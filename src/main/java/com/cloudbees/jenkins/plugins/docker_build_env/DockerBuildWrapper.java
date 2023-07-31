@@ -75,6 +75,16 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private final boolean noCache;
 
+    /**
+     * Variable name to pass user:group IDs to the container launch script in its environment.
+     */
+    public static final String JENKINS_USERID_VARIABLE = "JENKINS_USER_IDS";
+
+    /**
+     * Variable name to pass username string to the container launch script in its environment.
+     */
+    public static final String JENKINS_USERNAME_VARIABLE = "JENKINS_USER_NAME";
+
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
@@ -189,7 +199,7 @@ public class DockerBuildWrapper extends BuildWrapper {
                 }
             }
 
-            runInContainer.container = startBuildContainer(runInContainer, build, listener);
+            runInContainer.container = startBuildContainer(runInContainer, build, listener, launcher);
             listener.getLogger().println("Docker container " + runInContainer.container + " started to host the build");
         }
 
@@ -206,9 +216,13 @@ public class DockerBuildWrapper extends BuildWrapper {
 
 
 
-    private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener) throws IOException {
+    private String startBuildContainer(BuiltInContainer runInContainer, AbstractBuild build, BuildListener listener, final Launcher launcher) throws IOException {
         try {
             EnvVars environment = buildContainerEnvironment(build, listener);
+
+            // provide Jenkins User/Group IDs and User Name to the containter environment
+            environment.putIfNotNull(JENKINS_USERID_VARIABLE, whoAmI(launcher));
+            environment.putIfNotNull(JENKINS_USERNAME_VARIABLE, whoAmI_Name(launcher));
 
             String workdir = build.getWorkspace().getRemote();
 
@@ -254,6 +268,14 @@ public class DockerBuildWrapper extends BuildWrapper {
         }
         return uid+":"+gid;
 
+    }
+
+    private String whoAmI_Name(Launcher launcher) throws IOException, InterruptedException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-un").stdout(bos).quiet(true).join();
+        String userName = bos.toString().trim();
+
+        return userName;
     }
 
     @Extension
