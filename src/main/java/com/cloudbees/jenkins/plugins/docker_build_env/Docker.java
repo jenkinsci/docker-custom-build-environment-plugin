@@ -7,6 +7,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 
@@ -243,11 +244,16 @@ public class Docker implements Closeable {
         // On some distributions, docker doesn't start docker0 bridge until a container do require it
         // So let's run the container once, running /bin/true so it terminates immediately
 
+        DockerBuildWrapper.DescriptorImpl descriptor = (DockerBuildWrapper.DescriptorImpl)
+                Jenkins.getInstance().getDescriptor(DockerBuildWrapper.class);
+
+        final String initImage = descriptor.getInitImage();
+
         ArgumentListBuilder args = dockerCommand()
                 .add("run", "--rm")
                 .add("--entrypoint")
                 .add("/bin/true")
-                .add("alpine:3.6");
+                .add(initImage);
 
         int status = launcher.launch()
                 .envs(getEnvVars())
@@ -278,7 +284,7 @@ public class Docker implements Closeable {
                 .add("run", "--tty", "--rm")
                 .add("--entrypoint")
                 .add("/sbin/ip")
-                .add("alpine:3.6")
+                .add(initImage)
                 .add("route");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
