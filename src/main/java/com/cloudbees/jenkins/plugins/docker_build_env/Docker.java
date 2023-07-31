@@ -367,4 +367,17 @@ public class Docker implements Closeable {
         }
         return args;
     }
+
+    public void logs(String container) throws IOException, InterruptedException {
+        ArgumentListBuilder args = dockerCommand()
+            .add("logs", "-t", container);
+
+        listener.getLogger().println("Retrieving container logs");
+        OutputStream out = listener.getLogger();
+        OutputStream err = listener.getLogger();
+        int status = launcher.launch()
+                .cmds(args)
+                .stdout(out).stderr(err).quiet(true).join();
+        if (status != 0) listener.error("Unable to retrieve logs from container");
+    }
 }

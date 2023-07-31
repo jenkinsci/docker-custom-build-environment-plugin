@@ -199,7 +199,16 @@ public class DockerBuildWrapper extends BuildWrapper {
         return new Environment() {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                return build.getAction(BuiltInContainer.class).tearDown();
+                BuiltInContainer builtIn = build.getAction(BuiltInContainer.class);
+                if ( verbose ) {
+                    try {
+                        builtIn.getDocker().logs(builtIn.container);
+                    }
+                    catch ( Exception ex ) {
+                        LOGGER.log(Level.WARNING, "Error getting container logs", ex);
+                    }
+                }
+                return builtIn.tearDown();
             }
         };
     }
