@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +45,9 @@ public class Docker implements Closeable {
     private final boolean privileged;
     private final AbstractBuild build;
     private EnvVars envVars;
+    private List<String> environmentFilters;
 
-    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged) throws IOException, InterruptedException {
+    public Docker(DockerServerEndpoint dockerHost, String dockerInstallation, String credentialsId, AbstractBuild build, Launcher launcher, TaskListener listener, boolean verbose, boolean privileged, String filterEnvVariables) throws IOException, InterruptedException {
         this.dockerHost = dockerHost;
         this.dockerExecutable = DockerTool.getExecutable(dockerInstallation, Computer.currentComputer().getNode(), listener, build.getEnvironment(listener));
         this.registryEndpoint = new DockerRegistryEndpoint(null, credentialsId);
@@ -54,6 +56,7 @@ public class Docker implements Closeable {
         this.build = build;
         this.verbose = verbose | debug;
         this.privileged = privileged;
+        this.environmentFilters = getEnvFilters(filterEnvVariables);
     }
 
 
@@ -90,6 +93,13 @@ public class Docker implements Closeable {
             envVars = new EnvVars(build.getEnvironment(listener)).overrideAll(dockerEnv.env());
         }
         return envVars;
+    }
+
+    private List<String> getEnvFilters(String envFilters){
+        if(envFilters != null && !envFilters.equals("")) {
+            return Arrays.asList(envFilters.split(","));
+        }
+        return Arrays.asList();
     }
 
     public boolean pullImage(String image) throws IOException, InterruptedException {
@@ -320,7 +330,17 @@ public class Docker implements Closeable {
         EnvVars env = new EnvVars();
         LineIterator it = new LineIterator(new StringReader(out.toString()));
         while (it.hasNext()) {
-            env.addLine(it.nextLine());
+            boolean found = false;
+            String envV = it.nextLine();
+            for(String filter: environmentFilters) {
+                if(!filter.equals("") && envV.contains(filter + "=")) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                env.addLine(envV);
+            }
         }
         return env;
     }
