@@ -3,7 +3,8 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.21</version>
+    <version>5.17</version>
+    <relativePath />
   </parent>
 
   <groupId>com.cloudbees.jenkins.plugins</groupId>
@@ -18,16 +19,6 @@
       <name>MIT</name>
     </license>
   </licenses>
-
-  <developers>
-      <developer>
-          <email>jon.hermansen@gmail.com</email>
-          <id>jonhermansen</id>
-          <name>Jon Hermansen</name>
-          <organization>Jon Hermansen</organization>
-          <timezone>UTC-5</timezone>
-      </developer>
-  </developers>
 
   <dependencies>
       <dependency>
