@@ -70,7 +70,9 @@ THE SOFTWARE.
           <f:entry field="cpu" title="CPU shares">
             <f:textbox/>
           </f:entry>
+	      <f:entry field="extraArgs" title="Extra arguments">
+	        <f:textbox/>
+	      </f:entry>
         </f:advanced>
-
     </f:nested>
 </j:jelly>
