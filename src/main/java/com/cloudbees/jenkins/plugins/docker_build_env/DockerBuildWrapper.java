@@ -73,13 +73,15 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     private String cpu;
 
+    private final boolean useJenkinsWorkspace;
+
     private final boolean noCache;
 
     @DataBoundConstructor
     public DockerBuildWrapper(DockerImageSelector selector, String dockerInstallation, DockerServerEndpoint dockerHost, String dockerRegistryCredentials, boolean verbose, boolean privileged,
                               List<Volume> volumes, String group, String command,
                               boolean forcePull,
-                              String net, String memory, String cpu, boolean noCache) {
+                              String net, String memory, String cpu, boolean noCache, boolean useJenkinsWorkspace) {
         this.selector = selector;
         this.dockerInstallation = dockerInstallation;
         this.dockerHost = dockerHost;
@@ -94,6 +96,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         this.memory = memory;
         this.cpu = cpu;
         this.noCache = noCache;
+        this.useJenkinsWorkspace = useJenkinsWorkspace;
     }
 
     public DockerImageSelector getSelector() {
@@ -144,6 +147,10 @@ public class DockerBuildWrapper extends BuildWrapper {
 
     public boolean isNoCache() {
         return noCache;
+    }
+
+    public boolean isUseJenkinsWorkspace() {
+        return useJenkinsWorkspace;
     }
 
     @Override
@@ -210,7 +217,10 @@ public class DockerBuildWrapper extends BuildWrapper {
         try {
             EnvVars environment = buildContainerEnvironment(build, listener);
 
-            String workdir = build.getWorkspace().getRemote();
+            String workdir = null;
+            if(isUseJenkinsWorkspace()) {
+                workdir = build.getWorkspace().getRemote();
+            }
 
             Map<String, String> links = new HashMap<String, String>();
 
