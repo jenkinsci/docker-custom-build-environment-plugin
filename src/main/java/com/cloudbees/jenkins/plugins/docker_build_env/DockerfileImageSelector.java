@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -57,7 +56,7 @@ public class DockerfileImageSelector extends DockerImageSelector {
     }
 
     public String getDockerfile() {
-        return isEmpty(dockerfile) ? "Dockerfile" : dockerfile;
+        return (dockerfile == null || dockerfile.length() == 0) ? "Dockerfile" : dockerfile;
     }
 
     private Object readResolve() {

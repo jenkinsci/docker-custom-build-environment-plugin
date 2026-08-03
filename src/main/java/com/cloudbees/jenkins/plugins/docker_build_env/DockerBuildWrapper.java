@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Decorate Launcher so that every command executed by a build step is actually ran inside docker container.
@@ -247,7 +246,7 @@ public class DockerBuildWrapper extends BuildWrapper {
         String uid = bos.toString().trim();
 
         String gid = group;
-        if (isEmpty(group)) {
+        if (group == null || group.length() == 0) {
             ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
             launcher.launch().cmds("id", "-g").stdout(bos2).quiet(true).join();
             gid = bos2.toString().trim();
